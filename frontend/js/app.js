@@ -6,11 +6,11 @@
 // ✅ URL dinámica según entorno
 const API_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:5000/api' 
-    : 'https://drfashion-backend.onrender.com/api';
+    : 'https://papelerias-tony-backend.onrender.com/api';
 
 const BACKEND_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:5000' 
-    : 'https://drfashion-backend.onrender.com';
+    : 'https://papelerias-tony-backend.onrender.com';
 
 // ── ESTADO GLOBAL ──
 let activeCategory   = 'Todo';

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&R Fashion | Tienda Online</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Pantalla de login -->
+        <div class="login-screen" id="loginScreen">
+            <div class="login-box">
+                <h2>✨ D&R Fashion</h2>
+                <div id="loginMessage" class="message"></div>
+                <div class="input-group">
+                    <label>Correo electrónico</label>
+                    <input type="email" class="input-field" id="loginEmail" placeholder="ejemplo@email.com">
+                </div>
+                <div class="input-group">
+                    <label>Contraseña</label>
+                    <input type="password" class="input-field" id="loginPass" placeholder="••••••••">
+                </div>
+                <button class="btn" id="loginBtn">Iniciar sesión</button>
+                <div class="register-link">
+                    <a id="showRegisterBtn">¿No tienes cuenta? Regístrate</a>
+                </div>
+                <div class="forgot-password">
+                    <a id="showForgotBtn">¿Olvidaste tu contraseña?</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista Usuario -->
+        <div class="user-view" id="userView">
+            <button class="back-btn" id="logoutUserBtn"><i class="fas fa-arrow-left"></i> Cerrar sesión</button>
+            <div class="user-header">
+                <div class="logo-white">D&R Fashion</div>
+                <div class="user-icons">
+                    <i class="far fa-heart" id="favoritesIcon"></i>
+                    <i class="far fa-user" id="profileIcon"></i>
+                </div>
+            </div>
+
+			<div class="search-section">
+				<div class="search-wrapper">
+					<input class="search-input" type="text" id="searchInput" placeholder="Buscar productos..." autocomplete="off">
+					<button class="search-btn" id="searchBtn">Buscar</button>
+				</div>
+				<div id="suggestionsBox" class="suggestions-box"></div>
+			</div>
+			
+            <div class="categories" id="categoriesContainer"></div>
+
+            <h3 class="section-title">Productos destacados</h3>
+            <div class="product-grid" id="productGrid"></div>
+
+            <div class="promo-banner" id="promoBanner">
+                <h3>🔥 Promociones especiales</h3>
+                <p>Cargando promociones...</p>
+            </div>
+
+            <div class="user-footer">
+                <div>Sobre Nosotros · Tienda online sostenible</div>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista Admin -->
+        <div class="admin-view" id="adminView">
+            <button class="back-btn" id="logoutAdminBtn"><i class="fas fa-arrow-left"></i> Cerrar sesión</button>
+            <div class="admin-header">
+                <div class="logo-white">D&R Fashion | Admin</div>
+                <div><i class="fas fa-user-shield"></i> Panel de Administración</div>
+            </div>
+            <div class="admin-menu">
+				<div class="admin-menu-item active" data-tab="add">Agregar productos</div>
+				<div class="admin-menu-item" data-tab="inventory">Actualizar inventario</div>
+				<div class="admin-menu-item" data-tab="edit">Editar productos</div>
+				<div class="admin-menu-item" data-tab="promos">Promociones</div>
+				<div class="admin-menu-item" data-tab="admins">Administradores</div> <!-- ✅ NUEVO -->
+			</div>
+            <div class="admin-panel">
+                <!-- Agregar productos -->
+                <div class="admin-card" id="tab-add">
+				    <h3>➕ Agregar nuevo producto</h3>
+				    <div class="form-group">
+				        <label>Nombre</label>
+				        <input type="text" class="form-control" id="prodName" placeholder="Ej: Cámara profesional">
+				    </div>
+				    <div class="form-group">
+				        <label>Precio ($)</label>
+				        <input type="number" class="form-control" id="prodPrice" placeholder="299.99">
+				    </div>
+				    <div class="form-group">
+				        <label>Imagen</label>
+				        <input type="file" class="form-control" id="prodImage" accept="image/*">
+				    </div>
+				    <div class="form-group">
+				        <label>Categoría</label>
+				        <select class="form-control" id="prodCategory">
+				            <option>Electrónica</option>
+				            <option>Regalos</option>
+				            <option>Boutique</option>
+				            <option>Limpieza</option>
+				            <option>Papelería</option>
+				        </select>
+				    </div>
+				    <div class="form-group">
+				        <label>Stock</label>
+				        <input type="number" class="form-control" id="prodStock" placeholder="50">
+				    </div>
+				    <div class="form-group">
+				        <label>Emoji</label>
+				        <input type="text" class="form-control" id="prodIcon" placeholder="📷">
+				    </div>
+				    <button class="btn" id="addProductBtn">Guardar producto</button>
+				</div>
+                
+				<!-- Actualizar inventario -->
+				<div class="admin-card" id="tab-inventory" style="display: none;">
+					<h3>📦 Actualizar inventario</h3>
+					<div class="form-group" style="margin-bottom: 15px;">
+						<input type="text" id="searchInventoryInput" class="form-control" placeholder="🔍 Buscar producto por nombre..." style="width: 100%;">
+					</div>
+					<table class="inventory-table">
+						<thead>
+							<tr><th>Producto</th><th>Stock</th><th>Ajustar</th></tr>
+						</thead>
+						<tbody id="inventoryBody"></tbody>
+					</table>
+					<div style="margin-top: 8px; font-size: 0.85rem; color: #5a7a8a;" id="inventoryCount"></div>
+					<button class="btn" id="updateInventoryBtn">Actualizar stock</button>
+				</div>
+				
+                <!-- Editar productos -->
+				<div class="admin-card" id="tab-edit" style="display: none;">
+					<h3>✏️ Editar productos</h3>
+					<div class="form-group" style="margin-bottom: 15px;">
+						<input type="text" id="searchEditInput" class="form-control" placeholder="🔍 Buscar producto por nombre..." style="width: 100%;">
+					</div>
+					<table class="inventory-table">
+						<thead>
+							<tr><th>Producto</th><th>Precio</th><th>Imagen</th><th>Acciones</th></tr>
+						</thead>
+						<tbody id="editBody"></tbody>
+					</table>
+					<div style="margin-top: 8px; font-size: 0.85rem; color: #5a7a8a;" id="editCount"></div>
+				</div>
+				
+                <!-- Promociones -->
+                <div class="admin-card" id="tab-promos" style="display: none;">
+                    <h3>🎯 Gestionar promociones</h3>
+                    <div id="promosList"></div>
+                    <button class="btn" id="createPromoBtn">+ Crear promoción</button>
+                </div>
+				
+				<!-- Administradores -->
+				<div class="admin-card" id="tab-admins" style="display: none;">
+					<h3>👥 Gestionar Administradores</h3>
+					
+					<!-- Formulario para agregar nuevo admin -->
+					<div style="background: #e6faff; border-radius: 16px; padding: 15px; margin-bottom: 20px;">
+						<h4>➕ Agregar nuevo administrador</h4>
+						<div class="form-group">
+							<label>Nombre completo</label>
+							<input type="text" id="newAdminName" class="form-control" placeholder="Juan Pérez">
+						</div>
+						<div class="form-group">
+							<label>Correo electrónico</label>
+							<input type="email" id="newAdminEmail" class="form-control" placeholder="admin@ejemplo.com">
+						</div>
+						<div class="form-group">
+							<label>Contraseña</label>
+							<input type="password" id="newAdminPass" class="form-control" placeholder="••••••••">
+						</div>
+						<button class="btn" id="createAdminBtn" style="background: #2f2c79;">Crear administrador</button>
+					</div>
+					
+					<!-- Lista de administradores existentes -->
+					<h4>📋 Administradores registrados</h4>
+					<table class="inventory-table">
+						<thead>
+							<tr><th>Nombre</th><th>Correo</th><th>Fecha de registro</th><th>Acciones</th></tr>
+						</thead>
+						<tbody id="adminsListBody"></tbody>
+					</table>
+				</div>
+				
+            </div>
+        </div>
+
+        <!-- Botón flotante solicitar producto agotado (solo usuario) -->
+        <button class="request-floating" id="requestBtn" style="display: none;">
+            <i class="fas fa-bell"></i> Solicitar producto
+        </button>
+    </div>
+
+    <!-- Modales -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <div class="close-modal" onclick="closeModal('registerModal')"><i class="fas fa-times"></i></div>
+            <h3>📝 Registro de usuario</h3>
+            <div class="form-group">
+                <label>Nombre completo</label>
+                <input type="text" class="form-control" id="regName" placeholder="Juan Pérez">
+            </div>
+            <div class="form-group">
+                <label>Correo electrónico</label>
+                <input type="email" class="form-control" id="regEmail" placeholder="juan@email.com">
+            </div>
+            <div class="form-group">
+                <label>Contraseña</label>
+                <input type="password" class="form-control" id="regPass" placeholder="••••••••">
+            </div>
+			<div class="form-group">
+				<label>Pregunta de seguridad</label>
+				<select class="form-control" id="regSecurityQuestion">
+					<option>¿Cuál es el nombre de tu mamá?</option>
+					<option>¿Cuál es tu color favorito?</option>
+					<option>¿Cuál es tu comida favorita?</option>
+					<option>¿Cuál es tu pasatiempo favorito?</option>
+					<option>¿Cuál es tu artista favorito?</option>
+				</select>
+			</div>
+			<div class="form-group">
+				<label>Respuesta de seguridad</label>
+				<input type="text" class="form-control" id="regSecurityAnswer" placeholder="Tu respuesta">
+			</div>
+            <button class="btn" id="registerConfirmBtn">Registrarse</button>
+        </div>
+    </div>
+
+    <div class="modal" id="requestModal">
+        <div class="modal-content">
+            <div class="close-modal" onclick="closeModal('requestModal')"><i class="fas fa-times"></i></div>
+            <h3>📢 Solicitar producto</h3>
+            <p>Te notificaremos cuando esté disponible</p>
+            <div class="form-group">
+                <label>Producto</label>
+                <input type="text" class="form-control" id="requestProduct" placeholder="Ej: Cámara modelo X">
+            </div>
+            <div class="form-group">
+                <label>Tu email</label>
+                <input type="email" class="form-control" id="requestEmail" placeholder="tucorreo@email.com">
+            </div>
+            <button class="btn" id="submitRequestBtn">Enviar solicitud</button>
+        </div>
+    </div>
+	
+    <!-- Modal Editar Promoción -->
+
+	<div class="modal" id="editPromoModal">
+		<div class="modal-content">
+			<div class="close-modal" onclick="closeModal('editPromoModal')"><i class="fas fa-times"></i></div>
+			<h3>✏️ Editar promoción</h3>
+			<input type="hidden" id="editPromoId">
+			<div class="form-group">
+				<label>Título</label>
+				<input type="text" class="form-control" id="editPromoTitle">
+			</div>
+			<div class="form-group">
+				<label>Descripción</label>
+				<textarea class="form-control" id="editPromoDesc" rows="3"></textarea>
+			</div>
+			<div class="form-group">
+				<label>Descuento (%)</label>
+				<input type="number" class="form-control" id="editPromoDiscount" value="0">
+			</div>
+			<div class="form-group">
+				<label>Válido desde (YYYY-MM-DD)</label>
+				<input type="date" class="form-control" id="editPromoValidFrom">
+			</div>
+			<div class="form-group">
+				<label>Válido hasta (YYYY-MM-DD)</label>
+				<input type="date" class="form-control" id="editPromoValidTo">
+			</div>
+			<div class="form-group">
+				<label style="display: flex; align-items: center; gap: 10px;">
+					<input type="checkbox" id="editPromoActive" checked> Activa
+				</label>
+			</div>
+			<button class="btn" id="savePromoEditBtn">Guardar cambios</button>
+		</div>
+	</div>
+	
+	 <div class="modal" id="forgotModal">
+		<div class="modal-content">
+			<div class="close-modal" onclick="closeModal('forgotModal')"><i class="fas fa-times"></i></div>
+			<h3>🔑 Restaurar contraseña</h3>
+			<p>Responde tu pregunta de seguridad para restablecer tu contraseña.</p>
+			
+			<button id="showSecurityRecoveryBtn" class="btn-outline" style="margin-top: 20px;">
+				🔐 Recuperar con pregunta de seguridad
+			</button>
+		</div>
+	</div>
+	
+	<!-- Modal Recuperación por Pregunta de Seguridad -->
+	<div class="modal" id="securityRecoveryModal">
+		<div class="modal-content">
+			<div class="close-modal" onclick="closeModal('securityRecoveryModal')"><i class="fas fa-times"></i></div>
+			<h3>🔐 Recuperar contraseña</h3>
+			<div id="securityStep1">
+				<div class="form-group">
+					<label>Correo electrónico</label>
+					<input type="email" class="form-control" id="recoveryEmail" placeholder="tuemail@ejemplo.com">
+				</div>
+				<button class="btn" id="getSecurityQuestionBtn">Continuar</button>
+			</div>
+			<div id="securityStep2" style="display:none;">
+				<div class="form-group">
+					<label id="displaySecurityQuestion">Pregunta de seguridad</label>
+					<input type="text" class="form-control" id="securityAnswer" placeholder="Tu respuesta">
+				</div>
+				<div class="form-group">
+					<label>Nueva contraseña</label>
+					<input type="password" class="form-control" id="newPasswordRecovery" placeholder="Nueva contraseña">
+				</div>
+				<div class="form-group">
+					<label>Confirmar contraseña</label>
+					<input type="password" class="form-control" id="confirmPasswordRecovery" placeholder="Confirmar contraseña">
+				</div>
+				<button class="btn" id="resetWithSecurityBtn">Restablecer contraseña</button>
+			</div>
+			<div id="securityStep3" style="display:none;">
+				<p class="success" style="color:green;">✅ Contraseña actualizada correctamente. Ahora puedes iniciar sesión.</p>
+				<button class="btn" onclick="closeModal('securityRecoveryModal')">Cerrar</button>
+			</div>
+		</div>
+	</div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

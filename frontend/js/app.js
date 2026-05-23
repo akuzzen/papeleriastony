@@ -1,5 +1,5 @@
 // ============================================================
-//  D&R Fashion — app.js (CORREGIDO)
+//  Papelerías Tony — app.js
 //  Conectado a la API REST en producción
 // ============================================================
 

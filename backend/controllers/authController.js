@@ -52,19 +52,19 @@ const forgotPassword = async (req, res) => {
         
         // ✅ ENVÍO DE CORREO REAL (activado)
         const mailOptions = {
-            from: `"D&R Fashion" <${process.env.EMAIL_USER}>`,
+            from: `"Papelerías Tony" <${process.env.EMAIL_USER}>`,
             to: email,
-            subject: 'Recuperación de contraseña - D&R Fashion',
+            subject: 'Recuperación de contraseña - Papelerías Tony',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-                    <h2 style="color: #2f2c79;">D&R Fashion</h2>
+                    <h2 style="color: #2f2c79;">Papelerías Tony</h2>
                     <p>Hola <strong>${user.name}</strong>,</p>
                     <p>Recibimos una solicitud para restablecer tu contraseña. Haz clic en el siguiente botón:</p>
                     <a href="${resetLink}" style="display: inline-block; background-color: #2f2c79; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 20px 0;">Restablecer contraseña</a>
                     <p>Si no solicitaste esto, ignora este mensaje.</p>
                     <p><strong>Este enlace expirará en 1 hora.</strong></p>
                     <hr>
-                    <p style="font-size: 12px; color: #888;">D&R Fashion - Tu tienda de confianza</p>
+                    <p style="font-size: 12px; color: #888;">Papelerías Tony - Tu tienda de confianza</p>
                 </div>
             `
         };

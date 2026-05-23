@@ -285,7 +285,7 @@ function logout() {
     adminInitialized = false;
     currentToken = null;
     products = [];
-    sessionStorage.removeItem('drfashion_token');
+    sessionStorage.removeItem('papeleriastony_token');
     document.getElementById('loginEmail').value = '';
     document.getElementById('loginPass').value = '';
     stopInactivityTracking();

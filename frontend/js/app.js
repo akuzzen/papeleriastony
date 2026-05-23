@@ -356,12 +356,12 @@ function refreshAdminTables() {
                                 : (p.image_url || '🛍️')}
                         </span>
                         <input type="file" id="edit-file-${p.id}" accept="image/*" style="display: none;" data-id="${p.id}">
-                        <button class="btn-change-img" onclick="document.getElementById('edit-file-${p.id}').click()" style="background: #5dc1b9; color: white; border: none; border-radius: 8px; padding: 4px 8px; cursor: pointer;">📷 Cambiar</button>
+                        <button class="btn-change-img" onclick="document.getElementById('edit-file-${p.id}').click()" style="background: #0033A0; color: white; border: none; border-radius: 8px; padding: 4px 8px; cursor: pointer;">📷 Cambiar</button>
                     </div>
                 </div>
                 </td>
                 <td class="edit-actions">
-                    <i class="fas fa-save" style="color: #2f2c79; cursor: pointer; margin-right: 12px;" title="Guardar cambios" onclick="saveProductEdit(${p.id})"></i>
+                    <i class="fas fa-save" style="color: #0033A0; cursor: pointer; margin-right: 12px;" title="Guardar cambios" onclick="saveProductEdit(${p.id})"></i>
                     <i class="fas fa-trash" style="color: #c45d5d; cursor: pointer;" title="Eliminar" onclick="deleteProduct(${p.id})"></i>
                 </div>
                 </td>
@@ -453,7 +453,7 @@ async function loadAdminPromotions() {
         const promos = await apiFetch('/promotions');
         const list = document.getElementById('promosList');
         if (!list) return;
-        list.innerHTML = promos.length === 0 ? '<p>No hay promociones.</p>' : promos.map(p => `<div style="background:#e6faff;border-radius:12px;padding:12px;margin-bottom:10px;border:1px solid #88c9e0;"><div style="display:flex;justify-content:space-between;"><div><strong>${p.title}</strong> — ${p.discount_percent ?? 0}% OFF <span>${p.is_active ? '✅ Activa' : '⏸ Inactiva'}</span><div>${p.description || ''}</div></div><div><button onclick="openEditPromoModal(${p.id})" style="background:#5dc1b9;color:white;border:none;border-radius:20px;padding:4px 12px;margin-right:8px;cursor:pointer;">✏️ Editar</button><button onclick="deletePromotion(${p.id})" style="background:#c45d5d;color:white;border:none;border-radius:20px;padding:4px 12px;cursor:pointer;">🗑️ Eliminar</button></div></div></div>`).join('');
+        list.innerHTML = promos.length === 0 ? '<p>No hay promociones.</p>' : promos.map(p => `<div style="background:#F5F5F5;border-radius:12px;padding:12px;margin-bottom:10px;border:1px solid #E0E0E0;"><div style="display:flex;justify-content:space-between;"><div><strong>${p.title}</strong> — ${p.discount_percent ?? 0}% OFF <span>${p.is_active ? '✅ Activa' : '⏸ Inactiva'}</span><div>${p.description || ''}</div></div><div><button onclick="openEditPromoModal(${p.id})" style="background:#0033A0;color:white;border:none;border-radius:20px;padding:4px 12px;margin-right:8px;cursor:pointer;">✏️ Editar</button><button onclick="deletePromotion(${p.id})" style="background:#E3000F;color:white;border:none;border-radius:20px;padding:4px 12px;cursor:pointer;">🗑️ Eliminar</button></div></div></div>`).join('');
     } catch (e) { console.error('Promociones admin:', e); }
 }
 
@@ -520,7 +520,7 @@ async function loadAdmins() {
         const admins = await apiFetch('/admin/admins');
         const tbody = document.getElementById('adminsListBody');
         if (!tbody) return;
-        tbody.innerHTML = admins.map(admin => `<tr><td>${admin.name}</td><td>${admin.email}</td><td>${new Date(admin.created_at).toLocaleDateString('es-MX')}</td><td><button onclick="deleteAdmin(${admin.id})" style="background:#c45d5d;color:white;border:none;border-radius:20px;padding:4px 12px;cursor:pointer;">🗑️ Eliminar</button></td></tr>`).join('');
+        tbody.innerHTML = admins.map(admin => `<tr><td>${admin.name}</td><td>${admin.email}</td><td>${new Date(admin.created_at).toLocaleDateString('es-MX')}</td><td><button onclick="deleteAdmin(${admin.id})" style="background:#E3000F;color:white;border:none;border-radius:20px;padding:4px 12px;cursor:pointer;">🗑️ Eliminar</button></td></tr>`).join('');
     } catch (e) { console.error('Error cargando admins:', e); }
 }
 

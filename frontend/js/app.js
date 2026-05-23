@@ -406,6 +406,9 @@ function filterEditTable() {
         const productName = normalize(row.cells[0]?.textContent || '');
         row.style.display = (searchTerm === '' || productName.includes(searchTerm)) ? '' : 'none';
     });
+    const visibleRows = document.querySelectorAll('#editBody tr:not([style*="display: none"])');
+    const countSpan = document.getElementById('editCount');
+    if (countSpan) countSpan.textContent = `${visibleRows.length} de ${rows.length}`;
 }
 
 async function saveProductEdit(productId) {

@@ -41,7 +41,7 @@ app.get('/api/health', (req, res) => {
 
 app.get('/', (req, res) => {
     res.json({ 
-        message: 'D&R Fashion API funcionando correctamente',
+        message: 'Papelerías Tony API funcionando correctamente',
         status: 'online',
         endpoints: {
             products: '/api/products',

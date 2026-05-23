@@ -55,12 +55,12 @@ CREATE TABLE requests (
 -- Insertar usuario administrador por defecto (contraseña: admin123)
 -- La contraseña deberá ser hasheada con bcrypt en la aplicación, aquí la dejamos en texto plano solo para ejemplo
 INSERT INTO users (name, email, password, role) 
-VALUES ('Administrador', 'admin@drfashion.com', 'admin123', 'admin')
+VALUES ('Administrador', 'admin@papeleriatony.com', 'admin123', 'admin')
 ON CONFLICT (email) DO NOTHING;
 
 -- Insertar usuario de prueba
 INSERT INTO users (name, email, password, role) 
-VALUES ('Usuario Demo', 'usuario@email.com', 'user123', 'user')
+VALUES ('Usuario Demo', 'cliente@papeleriatony.com', 'user123', 'user')
 ON CONFLICT (email) DO NOTHING;
 
 -- Insertar productos de ejemplo

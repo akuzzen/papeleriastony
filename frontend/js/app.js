@@ -20,6 +20,8 @@ let currentToken     = null;
 let products         = [];
 let currentUserName  = '';
 const BACKEND_URL_IMAGES = API_URL.replace('/api', '');
+let activeCatInventory = 'Todos';
+let activeCatEdit      = 'Todos';
 
 // ── UTILIDADES HTTP ──
 function authHeaders(json = true) {
@@ -392,6 +394,22 @@ function refreshAdminTables() {
     }
     if (typeof filterInventoryTable === 'function') filterInventoryTable();
     if (typeof filterEditTable === 'function') filterEditTable();
+}
+
+function setCatFilterInventory(btn) {
+    document.querySelectorAll('#categoryFilterInventory .cat-filter-btn')
+        .forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCatInventory = btn.dataset.cat;
+    filterInventoryTable();
+}
+
+function setCatFilterEdit(btn) {
+    document.querySelectorAll('#categoryFilterEdit .cat-filter-btn')
+        .forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCatEdit = btn.dataset.cat;
+    filterEditTable();
 }
 
 function filterInventoryTable() {

@@ -149,8 +149,20 @@
 				<!-- Actualizar inventario -->
 				<div class="admin-card" id="tab-inventory" style="display: none;">
 					<h3>📦 Actualizar inventario</h3>
-					<div class="form-group" style="margin-bottom: 15px;">
-						<input type="text" id="searchInventoryInput" class="form-control" placeholder="🔍 Buscar producto por nombre..." style="width: 100%;">
+					<div class="form-group" style="margin-bottom:10px;">
+					    <input type="text" id="searchInventoryInput" class="form-control" placeholder="🔍 Buscar producto por nombre..." style="width:100%;">
+					</div>
+					<div id="categoryFilterInventory" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:15px;">
+					    <button class="cat-filter-btn active" data-cat="Todos" onclick="setCatFilterInventory(this)">Todos</button>
+					    <button class="cat-filter-btn" data-cat="Arte y Manualidades" onclick="setCatFilterInventory(this)">Arte y Manualidades</button>
+					    <button class="cat-filter-btn" data-cat="Cómputo e Impresión" onclick="setCatFilterInventory(this)">Cómputo e Impresión</button>
+					    <button class="cat-filter-btn" data-cat="Electrónica" onclick="setCatFilterInventory(this)">Electrónica</button>
+					    <button class="cat-filter-btn" data-cat="Escolar" onclick="setCatFilterInventory(this)">Escolar</button>
+					    <button class="cat-filter-btn" data-cat="Higiene y Limpieza" onclick="setCatFilterInventory(this)">Higiene y Limpieza</button>
+					    <button class="cat-filter-btn" data-cat="Muebles y Pizarrones" onclick="setCatFilterInventory(this)">Muebles y Pizarrones</button>
+					    <button class="cat-filter-btn" data-cat="Oficina" onclick="setCatFilterInventory(this)">Oficina</button>
+					    <button class="cat-filter-btn" data-cat="Papel" onclick="setCatFilterInventory(this)">Papel</button>
+					    <button class="cat-filter-btn" data-cat="Regalos y Fiestas" onclick="setCatFilterInventory(this)">Regalos y Fiestas</button>
 					</div>
 					<table class="inventory-table">
 						<thead>
@@ -165,8 +177,20 @@
                 <!-- Editar productos -->
 				<div class="admin-card" id="tab-edit" style="display: none;">
 					<h3>✏️ Editar productos</h3>
-					<div class="form-group" style="margin-bottom: 15px;">
-						<input type="text" id="searchEditInput" class="form-control" placeholder="🔍 Buscar producto por nombre..." style="width: 100%;">
+					<div class="form-group" style="margin-bottom:10px;">
+					    <input type="text" id="searchEditInput" class="form-control" placeholder="🔍 Buscar producto por nombre..." style="width:100%;">
+					</div>
+					<div id="categoryFilterEdit" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:15px;">
+					    <button class="cat-filter-btn active" data-cat="Todos" onclick="setCatFilterEdit(this)">Todos</button>
+					    <button class="cat-filter-btn" data-cat="Arte y Manualidades" onclick="setCatFilterEdit(this)">Arte y Manualidades</button>
+					    <button class="cat-filter-btn" data-cat="Cómputo e Impresión" onclick="setCatFilterEdit(this)">Cómputo e Impresión</button>
+					    <button class="cat-filter-btn" data-cat="Electrónica" onclick="setCatFilterEdit(this)">Electrónica</button>
+					    <button class="cat-filter-btn" data-cat="Escolar" onclick="setCatFilterEdit(this)">Escolar</button>
+					    <button class="cat-filter-btn" data-cat="Higiene y Limpieza" onclick="setCatFilterEdit(this)">Higiene y Limpieza</button>
+					    <button class="cat-filter-btn" data-cat="Muebles y Pizarrones" onclick="setCatFilterEdit(this)">Muebles y Pizarrones</button>
+					    <button class="cat-filter-btn" data-cat="Oficina" onclick="setCatFilterEdit(this)">Oficina</button>
+					    <button class="cat-filter-btn" data-cat="Papel" onclick="setCatFilterEdit(this)">Papel</button>
+					    <button class="cat-filter-btn" data-cat="Regalos y Fiestas" onclick="setCatFilterEdit(this)">Regalos y Fiestas</button>
 					</div>
 					<table class="inventory-table">
 						<thead>

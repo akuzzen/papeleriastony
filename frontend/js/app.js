@@ -349,12 +349,12 @@ async function loadPromotions() {
 function refreshAdminTables() {
     const invBody = document.getElementById('inventoryBody');
     if (invBody) {
-        invBody.innerHTML = products.map(p => `<tr><td>${p.image_url && p.image_url.startsWith('/assets/') ? '🖼️' : (p.image_url || '🛍️')} ${p.name}</td><td>${p.stock}</td><td><input type="number" class="stock-input" value="${p.stock}" min="0" data-id="${p.id}"></td></tr>`).join('');
+        invBody.innerHTML = products.map(p => `<tr data-category="${p.category}"><td>${p.image_url && p.image_url.startsWith('/assets/') ? '🖼️' : (p.image_url || '🛍️')} ${p.name}</td><td>${p.stock}</td><td><input type="number" class="stock-input" value="${p.stock}" min="0" data-id="${p.id}"></td></tr>`).join('');
     }
     const editBody = document.getElementById('editBody');
     if (editBody) {
         editBody.innerHTML = products.map(p => `
-            <tr>
+            <tr data-category="${p.category}">
                 <td>${p.name}</td>
                 <td>$${parseFloat(p.price).toFixed(2)}</td>
                 <td>
@@ -417,7 +417,10 @@ function filterInventoryTable() {
     const rows = document.querySelectorAll('#inventoryBody tr');
     rows.forEach(row => {
         const productName = normalize(row.cells[0]?.textContent || '');
-        row.style.display = (searchTerm === '' || productName.includes(searchTerm)) ? '' : 'none';
+        const productCat = row.dataset.category || '';
+        const matchSearch = searchTerm === '' || productName.includes(searchTerm);
+        const matchCat = activeCatInventory === 'Todos' || productCat === activeCatInventory;
+        row.style.display = (matchSearch && matchCat) ? '' : 'none';
     });
     const visibleRows = document.querySelectorAll('#inventoryBody tr:not([style*="display: none"])');
     const countSpan = document.getElementById('inventoryCount');
@@ -429,7 +432,10 @@ function filterEditTable() {
     const rows = document.querySelectorAll('#editBody tr');
     rows.forEach(row => {
         const productName = normalize(row.cells[0]?.textContent || '');
-        row.style.display = (searchTerm === '' || productName.includes(searchTerm)) ? '' : 'none';
+        const productCat = row.dataset.category || '';
+        const matchSearch = searchTerm === '' || productName.includes(searchTerm);
+        const matchCat = activeCatEdit === 'Todos' || productCat === activeCatEdit;
+        row.style.display = (matchSearch && matchCat) ? '' : 'none';
     });
     const visibleRows = document.querySelectorAll('#editBody tr:not([style*="display: none"])');
     const countSpan = document.getElementById('editCount');

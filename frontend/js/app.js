@@ -313,7 +313,7 @@ function initLogin() {
         try {
             const data = await apiFetch('/auth/login', { method: 'POST', body: JSON.stringify({ email, password: pass }) });
             currentToken = data.token;
-            sessionStorage.setItem('drfashion_token', data.token);
+            sessionStorage.setItem('papeleriastony_token', data.token);
             isAdmin = data.user.role === 'admin';
             currentUserName = data.user.name;
             showView(data.user.role);
@@ -771,10 +771,10 @@ function stopInactivityTracking() {
 //  INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
-    const savedToken = sessionStorage.getItem('drfashion_token');
+    const savedToken = sessionStorage.getItem('papeleriastony_token');
     if (savedToken) {
         currentToken = savedToken;
-        apiFetch('/auth/profile').then(user => { isAdmin = user.role === 'admin'; currentUserName = user.name; showView(user.role); }).catch(() => { sessionStorage.removeItem('drfashion_token'); showView(null); });
+        apiFetch('/auth/profile').then(user => { isAdmin = user.role === 'admin'; currentUserName = user.name; showView(user.role); }).catch(() => { sessionStorage.removeItem('papeleriastony_token'); showView(null); });
     } else { showView(null); }
     initLogin();
     initSearch();

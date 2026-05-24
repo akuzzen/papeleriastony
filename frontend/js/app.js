@@ -23,6 +23,33 @@ const BACKEND_URL_IMAGES = API_URL.replace('/api', '');
 let activeCatInventory = 'Todos';
 let activeCatEdit      = 'Todos';
 
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    if (!container) { alert(message); return; }
+    const colors = {
+        success: { bg: '#2ecc71', icon: '✅' },
+        error:   { bg: '#e74c3c', icon: '❌' },
+        warning: { bg: '#f39c12', icon: '⚠️' },
+        info:    { bg: '#3498db', icon: 'ℹ️' }
+    };
+    const { bg, icon } = colors[type] || colors.info;
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        background:${bg}; color:#fff; padding:14px 20px; border-radius:12px;
+        font-size:14px; font-weight:500; box-shadow:0 4px 16px rgba(0,0,0,0.2);
+        display:flex; align-items:center; gap:10px; min-width:280px; max-width:380px;
+        pointer-events:all; opacity:0; transform:translateX(40px);
+        transition:opacity 0.3s ease, transform 0.3s ease;
+    `;
+    toast.innerHTML = `<span style="font-size:18px;">${icon}</span><span>${message}</span>`;
+    container.appendChild(toast);
+    requestAnimationFrame(() => { toast.style.opacity = '1'; toast.style.transform = 'translateX(0)'; });
+    setTimeout(() => {
+        toast.style.opacity = '0'; toast.style.transform = 'translateX(40px)';
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
+}
+
 // ── UTILIDADES HTTP ──
 function authHeaders(json = true) {
     const h = {};
@@ -63,13 +90,13 @@ function isStrongPassword(password) {
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
     
     if (password.length < minLength) {
-        alert(`❌ La contraseña debe tener al menos ${minLength} caracteres.`);
+        showToast(`La contraseña debe tener al menos ${minLength} caracteres.`, 'error');
         return false;
     }
-    if (!hasUpperCase) { alert('❌ Debe contener al menos una letra MAYÚSCULA.'); return false; }
-    if (!hasLowerCase) { alert('❌ Debe contener al menos una letra minúscula.'); return false; }
-    if (!hasNumbers) { alert('❌ Debe contener al menos un número.'); return false; }
-    if (!hasSpecialChar) { alert('❌ Debe contener al menos un carácter especial (!@#$%^&*).'); return false; }
+    if (!hasUpperCase) { showToast('Debe contener al menos una letra MAYÚSCULA.', 'error'); return false; }
+    if (!hasLowerCase) { showToast('Debe contener al menos una letra minúscula.', 'error'); return false; }
+    if (!hasNumbers) { showToast('Debe contener al menos un número.', 'error'); return false; }
+    if (!hasSpecialChar) { showToast('Debe contener al menos un carácter especial (!@#$%^&*).', 'error'); return false; }
     return true;
 }
 
@@ -225,9 +252,9 @@ async function changeProductImage(productId, inputEl) {
         const idx = products.findIndex(p => p.id === productId);
         if (idx !== -1) products[idx] = updated;
         renderProducts();
-        alert('✅ Imagen actualizada correctamente');
+        showToast('Imagen actualizada correctamente', 'success');
     } catch (e) { 
-        alert('Error: ' + e.message); 
+        showToast('Error al actualizar imagen: ' + e.message, 'error'); 
     }
 }
 

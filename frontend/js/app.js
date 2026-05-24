@@ -471,6 +471,44 @@ async function saveProductEdit(productId) {
     } catch (e) { alert('Error al actualizar'); }
 }
 
+async function saveAllImages() {
+    const fileInputs = document.querySelectorAll('#editBody input[type="file"]');
+    const pending = Array.from(fileInputs).filter(f => f.files.length > 0);
+    if (pending.length === 0) { alert('No hay imágenes nuevas para guardar.'); return; }
+    const btn = document.getElementById('saveAllImagesBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Guardando...';
+    let ok = 0, fail = 0;
+    for (const input of pending) {
+        const productId = input.dataset.id;
+        const formData = new FormData();
+        const prod = products.find(p => p.id === parseInt(productId));
+        if (!prod) continue;
+        formData.append('name', prod.name);
+        formData.append('price', prod.price);
+        formData.append('category', prod.category);
+        formData.append('stock', prod.stock);
+        formData.append('image', input.files[0]);
+        try {
+            const res = await fetch(`${API_URL}/products/${productId}`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${currentToken}` },
+                body: formData
+            });
+            if (!res.ok) throw new Error();
+            const updated = await res.json();
+            const idx = products.findIndex(p => p.id === parseInt(productId));
+            if (idx !== -1) products[idx] = updated;
+            ok++;
+        } catch (e) { fail++; }
+    }
+    btn.disabled = false;
+    btn.textContent = '💾 Guardar todas las imágenes';
+    refreshAdminTables();
+    renderProducts();
+    alert(fail === 0 ? `✅ ${ok} imagen(es) guardada(s) correctamente.` : `✅ ${ok} guardadas, ❌ ${fail} con error.`);
+}
+
 async function deleteProduct(id) {
     const prod = products.find(p => p.id === id);
     if (!prod || !confirm(`¿Eliminar "${prod.name}"?`)) return;

@@ -682,15 +682,14 @@ function closeModal(id) {
 function initModals() {
     document.getElementById('showRegisterBtn').addEventListener('click', () => document.getElementById('registerModal').classList.add('active'));
     document.getElementById('showForgotBtn').addEventListener('click', () => document.getElementById('forgotModal').classList.add('active'));
-    document.getElementById('requestBtn').addEventListener('click', () => {
+    document.getElementById('requestBtn').addEventListener('click', async () => {
         document.getElementById('requestModal').classList.add('active');
-        // Pre-llenar email si está logueado
-        if (currentUser) {
-            document.getElementById('requestEmail').value = currentUser.email;
-        }
-        // Limpiar campo producto
         document.getElementById('requestProduct').value = '';
         document.getElementById('requestSuggestions').style.display = 'none';
+        try {
+            const user = await apiFetch('/auth/profile');
+            document.getElementById('requestEmail').value = user.email;
+        } catch (e) {}
     });
 
     document.getElementById('registerConfirmBtn').addEventListener('click', async () => {

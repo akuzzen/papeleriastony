@@ -3,7 +3,7 @@
 //  Conectado a la API REST en producción
 // ============================================================
 
-// ✅ URL dinámica según entorno
+// URL dinámica según entorno
 const API_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:5000/api' 
     : 'https://papelerias-tony-backend.onrender.com/api';
@@ -18,6 +18,8 @@ let isAdmin          = false;
 let adminInitialized = false;
 let currentToken     = null;
 let products         = [];
+let currentUserName  = '';
+const BACKEND_URL_IMAGES = API_URL.replace('/api', '');
 
 // ── UTILIDADES HTTP ──
 function authHeaders(json = true) {
@@ -174,7 +176,7 @@ function renderProducts() {
     grid.innerHTML = filtered.map(p => {
         const stockLabel = p.stock === 0 ? `<span class="stock-alert stock-low">⚠ Agotado</span>` : p.stock <= 3 ? `<span class="stock-alert stock-low">⚠ Pocas piezas (${p.stock})</span>` : `<span class="stock-alert">✓ En existencia (${p.stock})</span>`;
         
-        // ✅ IMAGEN CON URL ABSOLUTA
+        // IMAGEN CON URL ABSOLUTA
         let imageHtml = '';
         if (p.image_url && p.image_url !== 'null' && p.image_url.trim() !== '') {
             const imgSrc = p.image_url.startsWith('/assets/')
@@ -188,7 +190,7 @@ function renderProducts() {
         const changeImgBtn = isAdmin ? `<input type="file" accept="image/*" class="change-img-input" id="file-${p.id}" onchange="changeProductImage(${p.id}, this)"><button class="change-img-btn" onclick="document.getElementById('file-${p.id}').click()">📷 Cambiar imagen</button>` : '';
         
         return `<div class="product-card">
-                    <div class="favorite-icon" onclick="toggleFavorite(${p.id},this)">♡</div>
+                    <div class="favorite-icon" data-id="${p.id}" onclick="toggleFavorite(${p.id},this)">♡</div>
                     <div class="product-image">${imageHtml}${changeImgBtn}</div>
                     <div class="product-name">${searchTerm ? highlightMatch(p.name, searchTerm) : p.name}</div>
                     <div class="product-price">${parseFloat(p.price).toFixed(2)}</div>
@@ -228,7 +230,6 @@ async function changeProductImage(productId, inputEl) {
 }
 
 async function toggleFavorite(productId, btn) {
-    if (!currentToken) return;
     try {
         const { isFavorite } = await apiFetch(`/favorites/check/${productId}`);
         if (isFavorite) {
@@ -238,9 +239,11 @@ async function toggleFavorite(productId, btn) {
         } else {
             await apiFetch(`/favorites/${productId}`, { method: 'POST' });
             btn.textContent = '♥';
-            btn.style.color = '#e05c5c';
+            btn.style.color = '#E3000F';
         }
-    } catch (e) { console.error('Favorito:', e); }
+    } catch(e) {
+        console.error('Error toggling favorite', e);
+    }
 }
 
 function initSearch() {
@@ -267,6 +270,9 @@ function showView(role) {
         document.getElementById('userView').classList.add('active');
         document.getElementById('requestBtn').style.display = 'flex';
         loadProducts().then(() => { renderCategories(); renderProducts(); });
+        if (currentUserName) {
+            document.getElementById('helloUser').textContent = 'Hola, ' + currentUserName.split(' ')[0];
+        }
         loadPromotions();
         startInactivityTracking();
     } else {
@@ -309,6 +315,7 @@ function initLogin() {
             currentToken = data.token;
             sessionStorage.setItem('drfashion_token', data.token);
             isAdmin = data.user.role === 'admin';
+            currentUserName = data.user.name;
             showView(data.user.role);
         } catch (e) {
             msgEl.className = 'message error';
@@ -767,9 +774,88 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedToken = sessionStorage.getItem('drfashion_token');
     if (savedToken) {
         currentToken = savedToken;
-        apiFetch('/auth/profile').then(user => { isAdmin = user.role === 'admin'; showView(user.role); }).catch(() => { sessionStorage.removeItem('drfashion_token'); showView(null); });
+        apiFetch('/auth/profile').then(user => { isAdmin = user.role === 'admin'; currentUserName = user.name; showView(user.role); }).catch(() => { sessionStorage.removeItem('drfashion_token'); showView(null); });
     } else { showView(null); }
     initLogin();
     initSearch();
     initModals();
+    // ── DROPDOWN DE PERFIL ──────────────────────────────────────
+document.getElementById('profileIcon').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('userDropdown').classList.toggle('open');
+});
+
+document.addEventListener('click', () => {
+    document.getElementById('userDropdown')?.classList.remove('open');
+});
+
+document.getElementById('openFavoritesBtn').addEventListener('click', () => {
+    document.getElementById('userDropdown').classList.remove('open');
+    openFavoritesModal();
+});
+
+// ── FAVORITOS ────────────────────────────────────────────────
+async function openFavoritesModal() {
+    const grid = document.getElementById('favoritesGrid');
+    const empty = document.getElementById('favoritesEmpty');
+    grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#888;padding:20px;">Cargando...</p>';
+    document.getElementById('favoritesModal').classList.add('active');
+
+    try {
+        const favs = await apiFetch('/favorites');
+        grid.innerHTML = '';
+
+        if (!favs.length) {
+            grid.innerHTML = '<p id="favoritesEmpty" style="grid-column:1/-1;text-align:center;color:#888;padding:30px 0;">No tienes productos favoritos aún. 💙</p>';
+            return;
+        }
+
+        favs.forEach(p => {
+            const imgSrc = p.image_url?.startsWith('/assets')
+                ? BACKEND_URL_IMAGES + p.image_url
+                : p.image_url;
+            const imgHtml = (imgSrc && !imgSrc.startsWith('http') === false && imgSrc.match(/\.(jpg|jpeg|png|webp|avif|gif)$/i))
+                ? `<img src="${imgSrc}" alt="${p.name}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;background:#F5F5F5;">`
+                : `<div class="fav-emoji">${p.image_url || '🛍️'}</div>`;
+
+            const card = document.createElement('div');
+            card.className = 'fav-card';
+            card.innerHTML = `
+                ${imgHtml}
+                <div class="fav-name">${p.name}</div>
+                <div class="fav-price">$${parseFloat(p.price).toFixed(2)}</div>
+                <button class="fav-remove" onclick="removeFavoriteFromModal(${p.id}, this)">
+                    ✕ Quitar de favoritos
+                </button>
+            `;
+            grid.appendChild(card);
+        });
+    } catch (e) {
+        grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#c00;padding:20px;">Error al cargar favoritos.</p>';
+    }
+}
+
+async function removeFavoriteFromModal(productId, btn) {
+    try {
+        await apiFetch(`/favorites/${productId}`, { method: 'DELETE' });
+        const card = btn.closest('.fav-card');
+        card.style.opacity = '0';
+        card.style.transition = 'opacity 0.3s';
+        setTimeout(() => {
+            card.remove();
+            const grid = document.getElementById('favoritesGrid');
+            if (!grid.querySelector('.fav-card')) {
+                grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#888;padding:30px 0;">No tienes productos favoritos aún. 💙</p>';
+            }
+        }, 300);
+        // Actualizar el corazón en la grid principal
+        document.querySelectorAll(`.favorite-icon[data-id="${productId}"]`).forEach(el => {
+            el.textContent = '♡';
+            el.style.color = '';
+        });
+    } catch(e) {
+        alert('Error al quitar favorito');
+    }
+}
+
 });

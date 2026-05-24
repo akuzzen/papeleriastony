@@ -472,30 +472,36 @@ function filterEditTable() {
 async function saveProductEdit(productId) {
     const prod = products.find(p => p.id === productId);
     if (!prod) return;
-    const fileInput = document.getElementById(`edit-file-${productId}`);
-    const imageFile = fileInput ? fileInput.files[0] : null;
-    const newName = prompt('Editar nombre:', prod.name);
-    if (newName === null) return;
-    if (isDuplicateProductName(newName.trim(), productId)) { showToast(`Ya existe otro producto con el nombre "${newName.trim()}"`, 'error'); return; }
-    const newPrice = parseFloat(prompt('Editar precio:', prod.price));
-    if (isNaN(newPrice)) { showToast('Precio inválido', 'error'); return; }
-    const formData = new FormData();
-    formData.append('name', newName.trim());
-    formData.append('price', newPrice);
-    formData.append('category', prod.category);
-    formData.append('stock', prod.stock);
-    if (imageFile) formData.append('image', imageFile);
-    try {
-        const res = await fetch(`${API_URL}/products/${productId}`, { method: 'PUT', headers: { 'Authorization': `Bearer ${currentToken}` }, body: formData });
-        if (!res.ok) throw new Error();
-        const updated = await res.json();
-        const idx = products.findIndex(p => p.id === productId);
-        if (idx !== -1) products[idx] = updated;
-        refreshAdminTables();
-        renderProducts();
-        renderCategories();
-        showToast('Producto actualizado correctamente', 'success');
-    } catch (e) { showToast('Error al actualizar producto', 'error'); }
+    document.getElementById('editProductName').value = prod.name;
+    document.getElementById('editProductPrice').value = prod.price;
+    document.getElementById('editProductModal').classList.add('active');
+    document.getElementById('editProductConfirmBtn').onclick = async () => {
+        const newName = document.getElementById('editProductName').value.trim();
+        const newPrice = parseFloat(document.getElementById('editProductPrice').value);
+        if (!newName) { showToast('El nombre no puede estar vacío', 'warning'); return; }
+        if (isDuplicateProductName(newName, productId)) { showToast(`Ya existe otro producto con el nombre "${newName}"`, 'error'); return; }
+        if (isNaN(newPrice)) { showToast('Precio inválido', 'error'); return; }
+        closeModal('editProductModal');
+        const fileInput = document.getElementById(`edit-file-${productId}`);
+        const imageFile = fileInput ? fileInput.files[0] : null;
+        const formData = new FormData();
+        formData.append('name', newName);
+        formData.append('price', newPrice);
+        formData.append('category', prod.category);
+        formData.append('stock', prod.stock);
+        if (imageFile) formData.append('image', imageFile);
+        try {
+            const res = await fetch(`${API_URL}/products/${productId}`, { method: 'PUT', headers: { 'Authorization': `Bearer ${currentToken}` }, body: formData });
+            if (!res.ok) throw new Error();
+            const updated = await res.json();
+            const idx = products.findIndex(p => p.id === productId);
+            if (idx !== -1) products[idx] = updated;
+            refreshAdminTables();
+            renderProducts();
+            renderCategories();
+            showToast('Producto actualizado correctamente', 'success');
+        } catch (e) { showToast('Error al actualizar producto', 'error'); }
+    };
 }
 
 async function saveAllImages() {
@@ -536,15 +542,21 @@ async function saveAllImages() {
     showToast(fail === 0 ? `${ok} imagen(es) guardada(s) correctamente` : `${ok} guardadas, ${fail} con error`, fail === 0 ? 'success' : 'warning');
 }
 
-async function deleteProduct(id) {
-    const prod = products.find(p => p.id === id);
-    if (!prod || !confirm(`¿Eliminar "${prod.name}"?`)) return;
-    try {
-        await apiFetch(`/products/${id}`, { method: 'DELETE' });
-        products = products.filter(p => p.id !== id);
-        refreshAdminTables();
-        renderProducts();
-    } catch (e) { showToast('Error al eliminar producto', 'error'); }
+async function deleteProduct(productId) {
+    const prod = products.find(p => p.id === productId);
+    if (!prod) return;
+    document.getElementById('confirmDeleteTitle').textContent = '¿Eliminar producto?';
+    document.getElementById('confirmDeleteMsg').textContent = `Se eliminará "${prod.name}" permanentemente.`;
+    document.getElementById('confirmDeleteModal').classList.add('active');
+    document.getElementById('confirmDeleteBtn').onclick = async () => {
+        closeModal('confirmDeleteModal');
+        try {
+            await apiFetch(`/products/${productId}`, { method: 'DELETE' });
+            products = products.filter(p => p.id !== productId);
+            refreshAdminTables();
+            renderProducts();
+        } catch (e) { showToast('Error al eliminar producto', 'error'); }
+    };
 }
 
 async function loadAdminPromotions() {
@@ -591,28 +603,44 @@ async function savePromotionEdit() {
 }
 
 async function deletePromotion(id) {
-    if (!confirm('¿Eliminar esta promoción?')) return;
-    try {
-        await apiFetch(`/promotions/${id}`, { method: 'DELETE' });
-        loadAdminPromotions();
-    } catch (e) { showToast('Error al eliminar promoción', 'error'); }
+    document.getElementById('confirmDeleteTitle').textContent = '¿Eliminar promoción?';
+    document.getElementById('confirmDeleteMsg').textContent = 'Esta acción no se puede deshacer.';
+    document.getElementById('confirmDeleteModal').classList.add('active');
+    document.getElementById('confirmDeleteBtn').onclick = async () => {
+        closeModal('confirmDeleteModal');
+        try {
+            await apiFetch(`/promotions/${id}`, { method: 'DELETE' });
+            loadAdminPromotions();
+        } catch (e) { showToast('Error al eliminar promoción', 'error'); }
+    };
 }
 
 async function createPromotion() {
-    const title = prompt('📢 Título de la promoción:');
-    if (!title) return;
-    const description = prompt('📝 Descripción:');
-    if (description === null) return;
-    const discount = prompt('💰 Porcentaje de descuento (0-100):', '20');
-    if (discount === null) return;
-    const isActive = confirm('¿Activar esta promoción?');
+    document.getElementById('newPromoTitle').value = '';
+    document.getElementById('newPromoDesc').value = '';
+    document.getElementById('newPromoDiscount').value = '20';
+    document.getElementById('newPromoFrom').value = '';
+    document.getElementById('newPromoTo').value = '';
+    document.getElementById('newPromoActive').checked = true;
+    document.getElementById('createPromoModal').classList.add('active');
+}
+
+document.getElementById('createPromoConfirmBtn').addEventListener('click', async () => {
+    const title = document.getElementById('newPromoTitle').value.trim();
+    const description = document.getElementById('newPromoDesc').value.trim();
+    const discount = document.getElementById('newPromoDiscount').value;
+    const valid_from = document.getElementById('newPromoFrom').value || null;
+    const valid_to = document.getElementById('newPromoTo').value || null;
+    const isActive = document.getElementById('newPromoActive').checked;
+    if (!title) { showToast('El título es obligatorio', 'warning'); return; }
     try {
-        await apiFetch('/promotions', { method: 'POST', body: JSON.stringify({ title: title.trim(), description: description.trim(), discount_percent: parseInt(discount) || 0, valid_from: null, valid_to: null, is_active: isActive }) });
+        await apiFetch('/promotions', { method: 'POST', body: JSON.stringify({ title, description, discount_percent: parseInt(discount) || 0, valid_from, valid_to, is_active: isActive }) });
         showToast('Promoción creada correctamente', 'success');
+        closeModal('createPromoModal');
         loadAdminPromotions();
         loadPromotions();
     } catch (e) { showToast('Error al crear promoción', 'error'); }
-}
+});
 
 async function loadAdmins() {
     try {
@@ -644,12 +672,17 @@ async function deleteAdmin(adminId) {
         const currentUser = await apiFetch('/auth/profile');
         if (currentUser.id === adminId) { showToast('No puedes eliminarte a ti mismo', 'error'); return; }
     } catch (e) { console.error(e); }
-    if (!confirm('¿Eliminar este administrador?')) return;
-    try {
-        await apiFetch(`/admin/users/${adminId}`, { method: 'DELETE' });
-        showToast('Administrador eliminado', 'success');
-        loadAdmins();
-    } catch (e) { showToast('Error al eliminar: ' + e.message, 'error'); }
+    document.getElementById('confirmDeleteTitle').textContent = '¿Eliminar administrador?';
+    document.getElementById('confirmDeleteMsg').textContent = 'Se eliminará este administrador del sistema.';
+    document.getElementById('confirmDeleteModal').classList.add('active');
+    document.getElementById('confirmDeleteBtn').onclick = async () => {
+        closeModal('confirmDeleteModal');
+        try {
+            await apiFetch(`/admin/users/${adminId}`, { method: 'DELETE' });
+            showToast('Administrador eliminado', 'success');
+            loadAdmins();
+        } catch (e) { showToast('Error al eliminar: ' + e.message, 'error'); }
+    };
 }
 
 let addProductEventAttached = false;

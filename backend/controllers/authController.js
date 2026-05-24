@@ -47,7 +47,7 @@ const forgotPassword = async (req, res) => {
         console.log('⏰ 5. Expira en:', resetRecord.expires_at);
         
         // Generar enlace de recuperación
-        const resetLink = `http://localhost:8080/reset-password.html?token=${resetRecord.token}`;
+        const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:8080'}/reset-password.html?token=${resetRecord.token}`;
         console.log('🔗 6. ENLACE COMPLETO:', resetLink);
         
         // ✅ ENVÍO DE CORREO REAL (activado)

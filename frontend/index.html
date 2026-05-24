@@ -402,7 +402,71 @@
 	
 	<!-- Sistema de notificaciones toast -->
 	<div id="toastContainer" style="position:fixed; top:24px; right:24px; z-index:99999; display:flex; flex-direction:column; gap:10px; pointer-events:none;"></div>
-    
+
+	<!-- Modal: Editar producto (nombre + precio) -->
+	<div class="modal" id="editProductModal">
+	    <div class="modal-content" style="max-width:420px;">
+	        <div class="close-modal" onclick="closeModal('editProductModal')"><i class="fas fa-times"></i></div>
+	        <h3>✏️ Editar producto</h3>
+	        <div class="form-group">
+	            <label>Nombre</label>
+	            <input type="text" class="form-control" id="editProductName">
+	        </div>
+	        <div class="form-group">
+	            <label>Precio ($)</label>
+	            <input type="number" class="form-control" id="editProductPrice" step="0.01" min="0">
+	        </div>
+	        <button class="btn" id="editProductConfirmBtn" style="width:100%;margin-top:8px;">💾 Guardar cambios</button>
+	    </div>
+	</div>
+	
+	<!-- Modal: Confirmar eliminación -->
+	<div class="modal" id="confirmDeleteModal">
+	    <div class="modal-content" style="max-width:380px;text-align:center;">
+	        <h3 id="confirmDeleteTitle">¿Eliminar?</h3>
+	        <p id="confirmDeleteMsg" style="color:#666;margin:12px 0 24px;"></p>
+	        <div style="display:flex;gap:12px;justify-content:center;">
+	            <button onclick="closeModal('confirmDeleteModal')" style="background:#eee;color:#333;border:none;border-radius:10px;padding:10px 24px;cursor:pointer;font-size:14px;">Cancelar</button>
+	            <button id="confirmDeleteBtn" style="background:#E3000F;color:white;border:none;border-radius:10px;padding:10px 24px;cursor:pointer;font-size:14px;font-weight:bold;">Eliminar</button>
+	        </div>
+	    </div>
+	</div>
+	
+	<!-- Modal: Crear promoción -->
+	<div class="modal" id="createPromoModal">
+	    <div class="modal-content" style="max-width:460px;">
+	        <div class="close-modal" onclick="closeModal('createPromoModal')"><i class="fas fa-times"></i></div>
+	        <h3>📢 Crear promoción</h3>
+	        <div class="form-group">
+	            <label>Título</label>
+	            <input type="text" class="form-control" id="newPromoTitle" placeholder="Ej: Regreso a clases">
+	        </div>
+	        <div class="form-group">
+	            <label>Descripción</label>
+	            <textarea class="form-control" id="newPromoDesc" rows="2" placeholder="Ej: 15% en mochilas y libretas" style="resize:vertical;"></textarea>
+	        </div>
+	        <div class="form-group">
+	            <label>Descuento (%)</label>
+	            <input type="number" class="form-control" id="newPromoDiscount" min="0" max="100" placeholder="20">
+	        </div>
+	        <div style="display:flex;gap:12px;">
+	            <div class="form-group" style="flex:1;">
+	                <label>Válido desde</label>
+	                <input type="date" class="form-control" id="newPromoFrom">
+	            </div>
+	            <div class="form-group" style="flex:1;">
+	                <label>Válido hasta</label>
+	                <input type="date" class="form-control" id="newPromoTo">
+	            </div>
+	        </div>
+	        <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+	            <input type="checkbox" id="newPromoActive" checked style="width:18px;height:18px;cursor:pointer;">
+	            <label for="newPromoActive" style="margin:0;cursor:pointer;">Activar promoción</label>
+	        </div>
+	        <button class="btn" id="createPromoConfirmBtn" style="width:100%;margin-top:8px;">✅ Crear promoción</button>
+	    </div>
+	</div>
+	
 	<script src="js/app.js"></script>
 </body>
 </html>

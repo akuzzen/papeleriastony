@@ -18,8 +18,6 @@ router.get('/admins', authMiddleware, adminMiddleware, async (req, res) => {
     }
 });
 
-module.exports = router;
-
 // Eliminar administrador
 router.delete('/users/:id', authMiddleware, adminMiddleware, async (req, res) => {
     try {

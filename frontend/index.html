@@ -284,22 +284,23 @@
         </div>
     </div>
 
-    <div class="modal" id="requestModal">
-        <div class="modal-content">
-            <div class="close-modal" onclick="closeModal('requestModal')"><i class="fas fa-times"></i></div>
-            <h3>📢 Solicitar producto</h3>
-            <p>Te notificaremos cuando esté disponible</p>
-            <div class="form-group">
-                <label>Producto</label>
-                <input type="text" class="form-control" id="requestProduct" placeholder="Ej: Cámara modelo X">
-            </div>
-            <div class="form-group">
-                <label>Tu email</label>
-                <input type="email" class="form-control" id="requestEmail" placeholder="tucorreo@email.com">
-            </div>
-            <button class="btn" id="submitRequestBtn">Enviar solicitud</button>
-        </div>
-    </div>
+	<div class="modal" id="requestModal">
+	    <div class="modal-content">
+	        <div class="close-modal" onclick="closeModal('requestModal')"><i class="fas fa-times"></i></div>
+	        <h3>📢 Solicitar producto</h3>
+	        <p>Te notificaremos cuando esté disponible</p>
+	        <div class="form-group" style="position:relative;">
+	            <label>Producto</label>
+	            <input type="text" class="form-control" id="requestProduct" placeholder="Busca el producto..." autocomplete="off">
+	            <ul id="requestSuggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #ddd; border-radius:8px; max-height:200px; overflow-y:auto; z-index:9999; list-style:none; margin:4px 0 0 0; padding:0; box-shadow:0 4px 12px rgba(0,0,0,0.1);"></ul>
+	        </div>
+	        <div class="form-group">
+	            <label>Tu email</label>
+	            <input type="email" class="form-control" id="requestEmail" placeholder="tucorreo@email.com">
+	        </div>
+	        <button class="btn" id="submitRequestBtn">Enviar solicitud</button>
+	    </div>
+	</div>
 	
     <!-- Modal Editar Promoción -->
 

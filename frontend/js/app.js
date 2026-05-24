@@ -476,9 +476,9 @@ async function saveProductEdit(productId) {
     const imageFile = fileInput ? fileInput.files[0] : null;
     const newName = prompt('Editar nombre:', prod.name);
     if (newName === null) return;
-    if (isDuplicateProductName(newName.trim(), productId)) { alert(`❌ Ya existe otro producto con el nombre "${newName.trim()}"`); return; }
+    if (isDuplicateProductName(newName.trim(), productId)) { showToast(`Ya existe otro producto con el nombre "${newName.trim()}"`, 'error'); return; }
     const newPrice = parseFloat(prompt('Editar precio:', prod.price));
-    if (isNaN(newPrice)) { alert('Precio inválido'); return; }
+    if (isNaN(newPrice)) { showToast('Precio inválido', 'error'); return; }
     const formData = new FormData();
     formData.append('name', newName.trim());
     formData.append('price', newPrice);
@@ -494,14 +494,14 @@ async function saveProductEdit(productId) {
         refreshAdminTables();
         renderProducts();
         renderCategories();
-        alert(`✅ Producto actualizado`);
-    } catch (e) { alert('Error al actualizar'); }
+        showToast('Producto actualizado correctamente', 'success');
+    } catch (e) { showToast('Error al actualizar producto', 'error'); }
 }
 
 async function saveAllImages() {
     const fileInputs = document.querySelectorAll('#editBody input[type="file"]');
     const pending = Array.from(fileInputs).filter(f => f.files.length > 0);
-    if (pending.length === 0) { alert('No hay imágenes nuevas para guardar.'); return; }
+    if (pending.length === 0) { showToast('No hay imágenes nuevas para guardar', 'warning'); return; }
     const btn = document.getElementById('saveAllImagesBtn');
     btn.disabled = true;
     btn.textContent = '⏳ Guardando...';
@@ -533,7 +533,7 @@ async function saveAllImages() {
     btn.textContent = '💾 Guardar todas las imágenes';
     refreshAdminTables();
     renderProducts();
-    alert(fail === 0 ? `✅ ${ok} imagen(es) guardada(s) correctamente.` : `✅ ${ok} guardadas, ❌ ${fail} con error.`);
+    showToast(fail === 0 ? `${ok} imagen(es) guardada(s) correctamente` : `${ok} guardadas, ${fail} con error`, fail === 0 ? 'success' : 'warning');
 }
 
 async function deleteProduct(id) {
@@ -544,7 +544,7 @@ async function deleteProduct(id) {
         products = products.filter(p => p.id !== id);
         refreshAdminTables();
         renderProducts();
-    } catch (e) { alert('Error al eliminar'); }
+    } catch (e) { showToast('Error al eliminar producto', 'error'); }
 }
 
 async function loadAdminPromotions() {
@@ -569,7 +569,7 @@ async function openEditPromoModal(promoId) {
         document.getElementById('editPromoValidTo').value = promo.valid_to ? new Date(promo.valid_to).toISOString().split('T')[0] : '';
         document.getElementById('editPromoActive').checked = promo.is_active === true;
         document.getElementById('editPromoModal').classList.add('active');
-    } catch (e) { alert('Error al cargar promoción'); }
+    } catch (e) { showToast('Error al cargar promoción', 'error'); }
 }
 
 async function savePromotionEdit() {
@@ -580,14 +580,14 @@ async function savePromotionEdit() {
     const valid_from = document.getElementById('editPromoValidFrom').value || null;
     const valid_to = document.getElementById('editPromoValidTo').value || null;
     const is_active = document.getElementById('editPromoActive').checked;
-    if (!title) { alert('El título es obligatorio'); return; }
+    if (!title) { showToast('El título es obligatorio', 'warning'); return; }
     try {
         await apiFetch(`/promotions/${id}`, { method: 'PUT', body: JSON.stringify({ title, description, discount_percent, valid_from, valid_to, is_active }) });
-        alert('✅ Promoción actualizada');
+        showToast('Promoción actualizada correctamente', 'success');
         closeModal('editPromoModal');
         loadAdminPromotions();
         loadPromotions();
-    } catch (e) { alert('Error al actualizar'); }
+    } catch (e) { showToast('Error al actualizar promoción', 'error'); }
 }
 
 async function deletePromotion(id) {
@@ -595,7 +595,7 @@ async function deletePromotion(id) {
     try {
         await apiFetch(`/promotions/${id}`, { method: 'DELETE' });
         loadAdminPromotions();
-    } catch (e) { alert('Error al eliminar'); }
+    } catch (e) { showToast('Error al eliminar promoción', 'error'); }
 }
 
 async function createPromotion() {
@@ -608,10 +608,10 @@ async function createPromotion() {
     const isActive = confirm('¿Activar esta promoción?');
     try {
         await apiFetch('/promotions', { method: 'POST', body: JSON.stringify({ title: title.trim(), description: description.trim(), discount_percent: parseInt(discount) || 0, valid_from: null, valid_to: null, is_active: isActive }) });
-        alert('✅ Promoción creada');
+        showToast('Promoción creada correctamente', 'success');
         loadAdminPromotions();
         loadPromotions();
-    } catch (e) { alert('Error al crear'); }
+    } catch (e) { showToast('Error al crear promoción', 'error'); }
 }
 
 async function loadAdmins() {
@@ -627,29 +627,29 @@ async function createAdmin() {
     const name = document.getElementById('newAdminName').value.trim();
     const email = document.getElementById('newAdminEmail').value.trim();
     const password = document.getElementById('newAdminPass').value.trim();
-    if (!name || !email || !password) { alert('❌ Completa todos los campos'); return; }
+    if (!name || !email || !password) { showToast('Completa todos los campos', 'warning'); return; }
     if (!isStrongPassword(password)) return;
     try {
         await apiFetch('/auth/register/admin', { method: 'POST', body: JSON.stringify({ name, email, password }) });
-        alert(`✅ Administrador "${name}" creado`);
+        showToast(`Administrador "${name}" creado correctamente`, 'success');
         document.getElementById('newAdminName').value = '';
         document.getElementById('newAdminEmail').value = '';
         document.getElementById('newAdminPass').value = '';
         loadAdmins();
-    } catch (e) { alert('Error al crear administrador'); }
+    } catch (e) { showToast('Error al crear administrador', 'error'); }
 }
 
 async function deleteAdmin(adminId) {
     try {
         const currentUser = await apiFetch('/auth/profile');
-        if (currentUser.id === adminId) { alert('❌ No puedes eliminarte a ti mismo.'); return; }
+        if (currentUser.id === adminId) { showToast('No puedes eliminarte a ti mismo', 'error'); return; }
     } catch (e) { console.error(e); }
     if (!confirm('¿Eliminar este administrador?')) return;
     try {
         await apiFetch(`/admin/users/${adminId}`, { method: 'DELETE' });
-        alert('✅ Administrador eliminado');
+        showToast('Administrador eliminado', 'success');
         loadAdmins();
-    } catch (e) { alert('Error al eliminar: ' + e.message); }
+    } catch (e) { showToast('Error al eliminar: ' + e.message, 'error'); }
 }
 
 let addProductEventAttached = false;
@@ -682,8 +682,8 @@ function initAdminPanel() {
             const stock = parseInt(document.getElementById('prodStock').value) || 0;
             const icon = document.getElementById('prodIcon').value.trim();
             const imageFile = document.getElementById('prodImage').files[0];
-            if (!name || isNaN(price)) { alert('Completa nombre y precio.'); return; }
-            if (isDuplicateProductName(name)) { alert(`❌ Ya existe un producto con el nombre "${name}"`); return; }
+            if (!name || isNaN(price)) { showToast('Completa nombre y precio', 'warning'); return; }
+            if (isDuplicateProductName(name)) { showToast(`Ya existe un producto con el nombre "${name}"`, 'error'); return; }
             const fd = new FormData();
             fd.append('name', name); fd.append('price', price);
             fd.append('category', category); fd.append('stock', stock);
@@ -697,9 +697,9 @@ function initAdminPanel() {
                 refreshAdminTables();
                 renderCategories();
                 renderProducts();
-                alert(`✅ Producto "${name}" agregado.`);
+                showToast(`Producto "${name}" agregado correctamente`, 'success');
                 limpiarFormAgregar();
-            } catch (e) { alert('Error: ' + e.message); }
+            } catch (e) { showToast('Error: ' + e.message, 'error'); }
         });
     }
     const updateBtn = document.getElementById('updateInventoryBtn');
@@ -713,8 +713,8 @@ function initAdminPanel() {
                     const idx = products.findIndex(p => p.id === id);
                     if (idx !== -1) products[idx].stock = updated.stock;
                 }));
-                alert('✅ Stock actualizado.'); refreshAdminTables();
-            } catch (e) { alert('Error al actualizar stock'); }
+                showToast('Stock actualizado correctamente', 'success'); refreshAdminTables();
+            } catch (e) { showToast('Error al actualizar stock', 'error'); }
         });
     }
     const createPromoBtn = document.getElementById('createPromoBtn');
@@ -763,18 +763,18 @@ function initModals() {
         const pass = document.getElementById('regPass').value.trim();
         const security_question = document.getElementById('regSecurityQuestion').value;
         const security_answer = document.getElementById('regSecurityAnswer').value.trim();
-        if (!name || !email || !pass) { alert('❌ Completa todos los campos obligatorios.'); return; }
-        if (!security_question || !security_answer) { alert('❌ Selecciona una pregunta de seguridad y escribe la respuesta.'); return; }
+        if (!name || !email || !pass) { showToast('Completa todos los campos obligatorios', 'warning'); return; }
+        if (!security_question || !security_answer) { showToast('Selecciona una pregunta de seguridad y escribe la respuesta', 'warning'); return; }
         if (!isStrongPassword(pass)) return;
         try {
             await apiFetch('/auth/register', { method: 'POST', body: JSON.stringify({ name, email, password: pass, security_question, security_answer }) });
-            alert('✅ Registro exitoso');
+            showToast('Registro exitoso. ¡Bienvenido!', 'success');
             closeModal('registerModal');
             document.getElementById('regName').value = '';
             document.getElementById('regEmail').value = '';
             document.getElementById('regPass').value = '';
             document.getElementById('regSecurityAnswer').value = '';
-        } catch (e) { alert('Error: ' + e.message); }
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
     });
 
         // Buscador de productos agotados en el modal de solicitud
@@ -799,14 +799,14 @@ function initModals() {
     document.getElementById('submitRequestBtn').addEventListener('click', async () => {
         const prod = document.getElementById('requestProduct').value.trim();
         const email = document.getElementById('requestEmail').value.trim();
-        if (!prod || !email) { alert('Completa todos los campos.'); return; }
+        if (!prod || !email) { showToast('Completa todos los campos', 'warning'); return; }
         const existe = products.some(p => p.stock === 0 && p.name === prod);
         if (!existe) { alert('Por favor selecciona un producto de la lista.'); return; }
         try {
             await apiFetch('/requests', { method: 'POST', body: JSON.stringify({ product_name: prod, user_email: email }) });
-            alert(`✅ Solicitud registrada. Te avisaremos a ${email} cuando haya existencia.`);
+            showToast('Solicitud registrada. Te avisaremos cuando haya existencia', 'success');
             closeModal('requestModal');
-        } catch (e) { alert('Error: ' + e.message); }
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
     });
 
     document.getElementById('showSecurityRecoveryBtn').addEventListener('click', () => {
@@ -819,7 +819,7 @@ function initModals() {
 
     document.getElementById('getSecurityQuestionBtn').addEventListener('click', async () => {
         const email = document.getElementById('recoveryEmail').value.trim();
-        if (!email) { alert('Ingresa tu correo'); return; }
+        if (!email) { showToast('Ingresa tu correo', 'warning'); return; }
         try {
             const res = await fetch(`${API_URL}/auth/get-security-question`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
             const data = await res.json();
@@ -828,23 +828,23 @@ function initModals() {
                 document.getElementById('securityStep1').style.display = 'none';
                 document.getElementById('securityStep2').style.display = 'block';
                 window.recoveryEmail = email;
-            } else { alert(data.message); }
-        } catch (e) { alert('Error: ' + e.message); }
+            } else { showToast(data.message, data.success ? 'success' : 'error'); }
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
     });
 
     document.getElementById('resetWithSecurityBtn').addEventListener('click', async () => {
         const answer = document.getElementById('securityAnswer').value.trim();
         const newPass = document.getElementById('newPasswordRecovery').value;
         const confirmPass = document.getElementById('confirmPasswordRecovery').value;
-        if (newPass !== confirmPass) { alert('❌ Las contraseñas no coinciden'); return; }
+        if (newPass !== confirmPass) { showToast('Las contraseñas no coinciden', 'error'); return; }
         try {
             const res = await fetch(`${API_URL}/auth/reset-with-security`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: window.recoveryEmail, answer, newPassword: newPass }) });
             const data = await res.json();
             if (res.ok) {
                 document.getElementById('securityStep2').style.display = 'none';
                 document.getElementById('securityStep3').style.display = 'block';
-            } else { alert(data.message); }
-        } catch (e) { alert('Error: ' + e.message); }
+            } else { showToast(data.message, data.success ? 'success' : 'error'); }
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
     });
 
     const savePromoBtn = document.getElementById('savePromoEditBtn');
@@ -871,7 +871,7 @@ function resetInactivityTimer() {
     if (inactivityTimer) clearTimeout(inactivityTimer);
     if (!currentToken) return;
     inactivityTimer = setTimeout(() => {
-        if (currentToken) { alert('⚠️ Sesión expirada por inactividad'); logout(); }
+        if (currentToken) { showToast('Sesión expirada por inactividad', 'warning'); logout(); }
     }, 30 * 60 * 1000);
 }
 function startInactivityTracking() {
@@ -974,7 +974,7 @@ window.removeFavoriteFromModal = async function(productId, btn) {
             heartBtn.style.color = '';
         }
     } catch(e) {
-        alert('Error al quitar favorito');
+        showToast('Error al quitar favorito', 'error');
     }
 }
 

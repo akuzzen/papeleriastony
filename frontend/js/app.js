@@ -779,16 +779,13 @@ document.addEventListener('DOMContentLoaded', () => {
     initLogin();
     initSearch();
     initModals();
-    // ── DROPDOWN DE PERFIL ──────────────────────────────────────
 document.getElementById('profileIcon').addEventListener('click', (e) => {
     e.stopPropagation();
     document.getElementById('userDropdown').classList.toggle('open');
 });
-
 document.addEventListener('click', () => {
     document.getElementById('userDropdown')?.classList.remove('open');
 });
-
 document.getElementById('openFavoritesBtn').addEventListener('click', () => {
     document.getElementById('userDropdown').classList.remove('open');
     openFavoritesModal();
@@ -838,9 +835,12 @@ async function openFavoritesModal() {
 async function removeFavoriteFromModal(productId, btn) {
     try {
         await apiFetch(`/favorites/${productId}`, { method: 'DELETE' });
+
+        // Quitar tarjeta del modal con animación
         const card = btn.closest('.fav-card');
+        card.style.transition = 'opacity 0.3s, transform 0.3s';
         card.style.opacity = '0';
-        card.style.transition = 'opacity 0.3s';
+        card.style.transform = 'scale(0.9)';
         setTimeout(() => {
             card.remove();
             const grid = document.getElementById('favoritesGrid');
@@ -848,11 +848,13 @@ async function removeFavoriteFromModal(productId, btn) {
                 grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#888;padding:30px 0;">No tienes productos favoritos aún. 💙</p>';
             }
         }, 300);
-        // Actualizar el corazón en la grid principal
-        document.querySelectorAll(`.favorite-icon[data-id="${productId}"]`).forEach(el => {
-            el.textContent = '♡';
-            el.style.color = '';
-        });
+
+        // Actualizar corazón en la grid de productos
+        const heartBtn = document.querySelector(`.favorite-icon[data-id="${productId}"]`);
+        if (heartBtn) {
+            heartBtn.textContent = '♡';
+            heartBtn.style.color = '';
+        }
     } catch(e) {
         alert('Error al quitar favorito');
     }

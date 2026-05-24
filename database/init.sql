@@ -65,12 +65,15 @@ ON CONFLICT (email) DO NOTHING;
 
 -- Insertar productos de ejemplo
 INSERT INTO products (name, price, category, stock, image_url) VALUES
-('Cámara digital', 299.99, 'Regalos', 3, '📷'),
-('Camiseta algodón', 24.99, 'Boutique', 15, '👕'),
-('Libro bestseller', 15.90, 'Papeleria', 2, '📚'),
-('Lámpara LED', 45.50, 'Regalos', 8, '💡'),
-('Auriculares', 89.99, 'Regalos', 1, '🎧'),
-('Mochila', 55.00, 'Papeleria', 10, '🎒');
+('Acuarelas profesionales', 129.00, 'Arte y Manualidades', 20, '🎨'),
+('Impresora de tinta', 1899.00, 'Cómputo e Impresión', 5, '🖨️'),
+('Calculadora científica', 349.00, 'Electrónica', 12, '🧮'),
+('Mochila escolar', 350.00, 'Escolar', 30, '🎒'),
+('Jabón antibacterial', 45.00, 'Higiene y Limpieza', 100, '🧴'),
+('Silla ejecutiva', 2500.00, 'Muebles y Pizarrones', 8, '🪑'),
+('Engrapadora metálica', 189.00, 'Oficina', 40, '📎'),
+('Resma papel bond', 99.00, 'Papel', 200, '📄'),
+('Globos metálicos', 35.00, 'Regalos y Fiestas', 150, '🎈');
 
 -- Insertar una promoción de ejemplo
 INSERT INTO promotions (title, description, discount_percent, start_date, end_date, active) VALUES

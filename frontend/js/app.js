@@ -790,10 +790,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('userDropdown').classList.remove('open');
         openFavoritesModal();
     });
-});
 
 // ── FAVORITOS ────────────────────────────────────────────────
-async function openFavoritesModal() {
+window.openFavoritesModal = async function() {
     const grid = document.getElementById('favoritesGrid');
     const empty = document.getElementById('favoritesEmpty');
     grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#888;padding:20px;">Cargando...</p>';
@@ -833,7 +832,7 @@ async function openFavoritesModal() {
     }
 }
 
-async function removeFavoriteFromModal(productId, btn) {
+window.removeFavoriteFromModal = async function(productId, btn) {
     try {
         await apiFetch(`/favorites/${productId}`, { method: 'DELETE' });
 

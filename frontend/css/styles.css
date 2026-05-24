@@ -1067,3 +1067,23 @@ h1, h2, h3, h4, .section-title, .logo-white {
     font-family: 'Montserrat', sans-serif;
     font-weight: 600;
 }
+
+.cat-filter-btn {
+    padding: 6px 14px;
+    border-radius: 30px;
+    border: 2px solid var(--color-azul);
+    background: white;
+    color: var(--color-azul);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.cat-filter-btn:hover {
+    background: rgba(0,51,160,0.08);
+}
+.cat-filter-btn.active {
+    background: var(--color-azul);
+    color: white;
+}

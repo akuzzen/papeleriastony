@@ -779,16 +779,17 @@ document.addEventListener('DOMContentLoaded', () => {
     initLogin();
     initSearch();
     initModals();
-document.getElementById('profileIcon').addEventListener('click', (e) => {
-    e.stopPropagation();
-    document.getElementById('userDropdown').classList.toggle('open');
-});
-document.addEventListener('click', () => {
-    document.getElementById('userDropdown')?.classList.remove('open');
-});
-document.getElementById('openFavoritesBtn').addEventListener('click', () => {
-    document.getElementById('userDropdown').classList.remove('open');
-    openFavoritesModal();
+    document.getElementById('profileIcon').addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('userDropdown').classList.toggle('open');
+    });
+    document.addEventListener('click', () => {
+        document.getElementById('userDropdown')?.classList.remove('open');
+    });
+    document.getElementById('openFavoritesBtn').addEventListener('click', () => {
+        document.getElementById('userDropdown').classList.remove('open');
+        openFavoritesModal();
+    });
 });
 
 // ── FAVORITOS ────────────────────────────────────────────────

@@ -366,7 +366,12 @@ async function loadPromotions() {
         if (!banner) return;
         if (!promos.length) { banner.style.display = 'none'; return; }
         banner.style.display = 'block';
-        banner.innerHTML = promos.map(p => `<div><h3>🔥 ${p.title}</h3><p>${p.description || ''}${p.discount_percent ? ` — <strong>${p.discount_percent}% OFF</strong>` : ''}</p></div>`).join('');
+        banner.innerHTML = promos.map(p => {
+            const desde = p.valid_from ? new Date(p.valid_from).toLocaleDateString('es-MX', {day:'2-digit', month:'short', year:'numeric'}) : null;
+            const hasta = p.valid_to   ? new Date(p.valid_to).toLocaleDateString('es-MX',   {day:'2-digit', month:'short', year:'numeric'}) : null;
+            const vigencia = (desde && hasta) ? `<span style="font-size:12px;opacity:0.85;">📅 Vigencia: ${desde} – ${hasta}</span>` : '';
+            return `<div><h3>🔥 ${p.title}</h3><p>${p.description || ''}${p.discount_percent ? ` — <strong>${p.discount_percent}% OFF</strong>` : ''}</p>${vigencia}</div>`;
+        }).join('');
     } catch (e) { console.error('Promociones:', e); }
 }
 

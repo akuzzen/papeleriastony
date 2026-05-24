@@ -960,3 +960,108 @@ h1, h2, h3, h4, .section-title, .logo-white {
     background-color: rgba(255,255,255,0.3);
     transform: scale(1.12);
 }
+
+/* Saludo usuario */
+.hello-user {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: white;
+    opacity: 0.95;
+}
+
+/* Wrapper del menú de usuario */
+.user-menu-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Dropdown del perfil */
+.user-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    background: white;
+    border-radius: 16px;
+    border: 2px solid #E0E0E0;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    min-width: 180px;
+    z-index: 500;
+    overflow: hidden;
+}
+
+.user-dropdown.open {
+    display: block;
+}
+
+.user-dropdown-item {
+    padding: 14px 18px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #0033A0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.2s;
+}
+
+.user-dropdown-item:hover {
+    background-color: #F5F5F5;
+}
+
+/* Tarjeta de producto favorito en el modal */
+.fav-card {
+    background: white;
+    border: 2px solid #E0E0E0;
+    border-radius: 20px;
+    padding: 14px;
+    text-align: center;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.fav-card:hover {
+    transform: translateY(-3px);
+    border-color: #0033A0;
+}
+
+.fav-card img, .fav-card .fav-emoji {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 12px;
+    font-size: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #F5F5F5;
+    margin-bottom: 8px;
+}
+
+.fav-card .fav-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #0033A0;
+    margin-bottom: 4px;
+}
+
+.fav-card .fav-price {
+    font-weight: 700;
+    color: #0A1128;
+    font-size: 1rem;
+}
+
+.fav-card .fav-remove {
+    margin-top: 8px;
+    background: none;
+    border: none;
+    color: #E3000F;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+}

@@ -784,7 +784,31 @@ function closeModal(id) {
 
 function initModals() {
     document.getElementById('showRegisterBtn').addEventListener('click', () => document.getElementById('registerModal').classList.add('active'));
-    document.getElementById('showForgotBtn').addEventListener('click', () => document.getElementById('forgotModal').classList.add('active'));
+    document.getElementById('showForgotBtn').addEventListener('click', () => {
+        document.getElementById('forgotStep1').style.display = 'block';
+        document.getElementById('forgotStep2').style.display = 'none';
+        document.getElementById('forgotEmail').value = '';
+        document.getElementById('forgotModal').classList.add('active');
+    });
+    
+    document.getElementById('sendResetEmailBtn').addEventListener('click', async () => {
+        const email = document.getElementById('forgotEmail').value.trim();
+        if (!email) { showToast('Ingresa tu correo', 'warning'); return; }
+        try {
+            const res = await fetch(`${API_URL}/auth/forgot-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                document.getElementById('forgotStep1').style.display = 'none';
+                document.getElementById('forgotStep2').style.display = 'block';
+            } else {
+                showToast(data.message || 'Error al enviar correo', 'error');
+            }
+        } catch (e) { showToast('Error de conexión', 'error'); }
+    });
     document.getElementById('requestBtn').addEventListener('click', async () => {
         document.getElementById('requestModal').classList.add('active');
         document.getElementById('requestProduct').value = '';

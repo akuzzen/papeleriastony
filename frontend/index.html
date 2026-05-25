@@ -341,16 +341,32 @@
 		</div>
 	</div>
 	
-	 <div class="modal" id="forgotModal">
-		<div class="modal-content">
-			<div class="close-modal" onclick="closeModal('forgotModal')"><i class="fas fa-times"></i></div>
-			<h3>🔑 Restaurar contraseña</h3>
-			<p>Responde tu pregunta de seguridad para restablecer tu contraseña.</p>
-			
-			<button id="showSecurityRecoveryBtn" class="btn-outline" style="margin-top: 20px;">
-				🔐 Recuperar con pregunta de seguridad
-			</button>
-		</div>
+	<div class="modal" id="forgotModal">
+	    <div class="modal-content">
+	        <div class="close-modal" onclick="closeModal('forgotModal')"><i class="fas fa-times"></i></div>
+	        <h3>🔑 Restaurar contraseña</h3>
+	        <p style="color:#666;margin-bottom:20px;">Elige cómo quieres recuperar tu contraseña.</p>
+	
+	        <div id="forgotStep1">
+	            <div class="form-group">
+	                <label>Correo electrónico</label>
+	                <input type="email" class="form-control" id="forgotEmail" placeholder="tuemail@ejemplo.com">
+	            </div>
+	            <button class="btn" id="sendResetEmailBtn" style="width:100%;margin-bottom:12px;">
+	                📧 Enviar correo de recuperación
+	            </button>
+	            <button id="showSecurityRecoveryBtn" class="btn-outline" style="width:100%;">
+	                🔐 Recuperar con pregunta de seguridad
+	            </button>
+	        </div>
+	
+	        <div id="forgotStep2" style="display:none;text-align:center;padding:20px 0;">
+	            <p style="font-size:32px;">📬</p>
+	            <p style="color:#27ae60;font-weight:bold;margin:12px 0;">¡Correo enviado!</p>
+	            <p style="color:#666;font-size:14px;">Revisa tu bandeja de entrada y sigue el enlace para restablecer tu contraseña.</p>
+	            <button class="btn" onclick="closeModal('forgotModal')" style="margin-top:20px;width:100%;">Cerrar</button>
+	        </div>
+	    </div>
 	</div>
 	
 <!-- Modal Recuperación por Pregunta de Seguridad -->

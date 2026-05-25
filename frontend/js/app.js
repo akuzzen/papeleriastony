@@ -795,7 +795,7 @@ function initModals() {
         const email = document.getElementById('forgotEmail').value.trim();
         if (!email) { showToast('Ingresa tu correo', 'warning'); return; }
         try {
-            const res = await fetch(`${API_URL}/auth/forgot-password`, {
+            const res = await fetch(`${API_URL}/auth/forgot`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
@@ -809,6 +809,7 @@ function initModals() {
             }
         } catch (e) { showToast('Error de conexión', 'error'); }
     });
+    
     document.getElementById('requestBtn').addEventListener('click', async () => {
         document.getElementById('requestModal').classList.add('active');
         document.getElementById('requestProduct').value = '';

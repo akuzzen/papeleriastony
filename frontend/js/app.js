@@ -900,6 +900,7 @@ function initModals() {
         const newPass = document.getElementById('newPasswordRecovery').value;
         const confirmPass = document.getElementById('confirmPasswordRecovery').value;
         if (newPass !== confirmPass) { showToast('Las contraseñas no coinciden', 'error'); return; }
+        if (!isStrongPassword(newPass)) return;
         try {
             const res = await fetch(`${API_URL}/auth/reset-with-security`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: window.recoveryEmail, answer, newPassword: newPass }) });
             const data = await res.json();

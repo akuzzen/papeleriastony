@@ -215,6 +215,28 @@ const registerAdmin = async (req, res) => {
     }
 };
 
+const registerSeller = async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Solo administradores pueden crear vendedores' });
+        }
+        const { name, email, password } = req.body;
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: 'Todos los campos son requeridos' });
+        }
+        const existing = await User.findByEmail(email);
+        if (existing) {
+            return res.status(400).json({ message: 'El correo ya está registrado' });
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = await User.create({ name, email, password: hashedPassword, role: 'seller' });
+        res.status(201).json({ message: 'Vendedor creado correctamente', user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al crear vendedor' });
+    }
+};
+
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -295,13 +317,4 @@ const resetWithSecurity = async (req, res) => {
 };
 
 
-module.exports = { 
-    register, 
-    login, 
-    getProfile, 
-    forgotPassword, 
-    resetPassword,
-    registerAdmin,
-    getSecurityQuestion,
-    resetWithSecurity
-};
+module.exports = { register, login, getProfile, forgotPassword, resetPassword, registerAdmin, registerSeller, getSecurityQuestion, resetWithSecurity };

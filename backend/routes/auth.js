@@ -21,11 +21,8 @@ router.post('/forgot', forgotPassword);
 router.post('/reset', resetPassword);
 router.post('/get-security-question', getSecurityQuestion);
 router.post('/reset-with-security', resetWithSecurity);
-
-// Ruta protegida (requiere token)
 router.get('/profile', authMiddleware, getProfile);
-
-// Ruta protegida para admin
 router.post('/register/admin', authMiddleware, registerAdmin);
+router.post('/register/seller', authMiddleware, registerSeller);
 
 module.exports = router;

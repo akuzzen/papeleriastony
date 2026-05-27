@@ -28,4 +28,12 @@ const adminMiddleware = (req, res, next) => {
     }
 };
 
-module.exports = { authMiddleware, adminMiddleware };
+const sellerMiddleware = (req, res, next) => {
+    if (req.user && (req.user.role === 'seller' || req.user.role === 'admin')) {
+        next();
+    } else {
+        res.status(403).json({ message: 'Acceso denegado. Requiere permisos de vendedor.' });
+    }
+};
+
+module.exports = { authMiddleware, adminMiddleware, sellerMiddleware };

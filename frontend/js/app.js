@@ -22,6 +22,9 @@ let currentUserName  = '';
 const BACKEND_URL_IMAGES = API_URL.replace('/api', '');
 let activeCatInventory = 'Todos';
 let activeCatEdit      = 'Todos';
+let saleCart = [];
+let sellerInitialized = false;
+let currentUserId = null;
 
 function showToast(message, type = 'success') {
     const container = document.getElementById('toastContainer');
@@ -290,10 +293,16 @@ function showView(role) {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('userView').classList.remove('active');
     document.getElementById('adminView').classList.remove('active');
+    document.getElementById('sellerView').style.display = 'none';
     document.getElementById('requestBtn').style.display = 'none';
     if (role === 'admin') {
         document.getElementById('adminView').classList.add('active');
         initAdminPanel();
+        startInactivityTracking();
+    } else if (role === 'seller') {
+        document.getElementById('sellerView').style.display = 'block';
+        document.getElementById('sellerName').textContent = '| ' + currentUserName.split(' ')[0];
+        initSellerPanel();
         startInactivityTracking();
     } else if (role === 'user') {
         document.getElementById('userView').classList.add('active');
@@ -314,11 +323,15 @@ function logout() {
     document.getElementById('loginScreen').style.display = 'block';
     document.getElementById('userView').classList.remove('active');
     document.getElementById('adminView').classList.remove('active');
+    document.getElementById('sellerView').style.display = 'none';
     document.getElementById('requestBtn').style.display = 'none';
     activeCategory = 'Todo';
     isAdmin = false;
     adminInitialized = false;
+    sellerInitialized = false;
     currentToken = null;
+    currentUserId = null;
+    saleCart = [];
     products = [];
     sessionStorage.removeItem('papeleriastony_token');
     document.getElementById('loginEmail').value = '';
@@ -345,6 +358,7 @@ function initLogin() {
             sessionStorage.setItem('papeleriastony_token', data.token);
             isAdmin = data.user.role === 'admin';
             currentUserName = data.user.name;
+            currentUserId = data.user.id;
             showView(data.user.role);
         } catch (e) {
             msgEl.className = 'message error';
@@ -354,6 +368,7 @@ function initLogin() {
     document.getElementById('loginPass').addEventListener('keydown', (e) => { if (e.key === 'Enter') loginBtn.click(); });
     document.getElementById('logoutUserBtn').addEventListener('click', logout);
     document.getElementById('logoutAdminBtn').addEventListener('click', logout);
+    document.getElementById('logoutSellerBtn').addEventListener('click', logout);
 }
 
 // ============================================================
@@ -772,6 +787,154 @@ function initAdminPanel() {
 function limpiarFormAgregar() {
     ['prodName','prodPrice','prodStock','prodIcon'].forEach(id => { document.getElementById(id).value = ''; });
     document.getElementById('prodImage').value = '';
+}
+
+// ============================================================
+//  PANEL VENDEDOR
+// ============================================================
+async function initSellerPanel() {
+    if (sellerInitialized) { loadSellerOrders(); return; }
+    sellerInitialized = true;
+
+    await loadProducts();
+
+    // Buscador de productos
+    document.getElementById('saleProductSearch').addEventListener('input', function () {
+        const term = normalize(this.value.trim());
+        const list = document.getElementById('saleProductSuggestions');
+        if (!term) { list.style.display = 'none'; return; }
+        const found = products.filter(p => p.stock > 0 && normalize(p.name).includes(term)).slice(0, 10);
+        if (!found.length) { list.style.display = 'none'; return; }
+        list.innerHTML = found.map(p => `
+            <li data-id="${p.id}" data-name="${p.name}" data-price="${p.price}" data-stock="${p.stock}"
+                style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;font-size:14px;display:flex;justify-content:space-between;">
+                <span>${p.name}</span>
+                <span style="color:#2f2c79;font-weight:bold;">$${parseFloat(p.price).toFixed(2)} <small style="color:#888;">(${p.stock} disponibles)</small></span>
+            </li>`).join('');
+        list.style.display = 'block';
+        list.querySelectorAll('li').forEach(li => {
+            li.addEventListener('mouseenter', () => li.style.background = '#f5f5f5');
+            li.addEventListener('mouseleave', () => li.style.background = '#fff');
+            li.addEventListener('click', () => {
+                addToCart({ id: parseInt(li.dataset.id), name: li.dataset.name, price: parseFloat(li.dataset.price), stock: parseInt(li.dataset.stock) });
+                document.getElementById('saleProductSearch').value = '';
+                list.style.display = 'none';
+            });
+        });
+    });
+
+    document.getElementById('confirmSaleBtn').addEventListener('click', confirmSale);
+    loadSellerOrders();
+}
+
+function addToCart(product) {
+    const existing = saleCart.find(i => i.id === product.id);
+    if (existing) {
+        if (existing.quantity >= product.stock) { showToast('Stock máximo alcanzado', 'warning'); return; }
+        existing.quantity++;
+    } else {
+        saleCart.push({ ...product, quantity: 1 });
+    }
+    renderCart();
+}
+
+function renderCart() {
+    const container = document.getElementById('saleCart');
+    if (!saleCart.length) {
+        container.innerHTML = '<p style="color:#aaa;font-size:14px;">No hay productos en el carrito.</p>';
+        document.getElementById('saleTotal').textContent = '0.00';
+        return;
+    }
+    container.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+            <thead><tr style="background:#f5f5f5;">
+                <th style="padding:8px;text-align:left;">Producto</th>
+                <th style="padding:8px;text-align:center;">Precio</th>
+                <th style="padding:8px;text-align:center;">Cantidad</th>
+                <th style="padding:8px;text-align:right;">Subtotal</th>
+                <th style="padding:8px;"></th>
+            </tr></thead>
+            <tbody>${saleCart.map((item, idx) => `
+                <tr style="border-bottom:1px solid #eee;">
+                    <td style="padding:8px;">${item.name}</td>
+                    <td style="padding:8px;text-align:center;">$${item.price.toFixed(2)}</td>
+                    <td style="padding:8px;text-align:center;">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                            <button onclick="changeCartQty(${idx},-1)" style="background:#eee;border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:16px;">−</button>
+                            <span>${item.quantity}</span>
+                            <button onclick="changeCartQty(${idx},1)" style="background:#eee;border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:16px;">+</button>
+                        </div>
+                    </td>
+                    <td style="padding:8px;text-align:right;font-weight:bold;">$${(item.price * item.quantity).toFixed(2)}</td>
+                    <td style="padding:8px;text-align:center;"><button onclick="removeFromCart(${idx})" style="background:none;border:none;cursor:pointer;color:#e74c3c;font-size:16px;">🗑️</button></td>
+                </tr>`).join('')}
+            </tbody>
+        </table>`;
+    const total = saleCart.reduce((s, i) => s + i.price * i.quantity, 0);
+    document.getElementById('saleTotal').textContent = total.toFixed(2);
+}
+
+function changeCartQty(idx, delta) {
+    saleCart[idx].quantity += delta;
+    if (saleCart[idx].quantity <= 0) saleCart.splice(idx, 1);
+    else if (saleCart[idx].quantity > saleCart[idx].stock) { saleCart[idx].quantity = saleCart[idx].stock; showToast('Stock máximo alcanzado', 'warning'); }
+    renderCart();
+}
+
+function removeFromCart(idx) {
+    saleCart.splice(idx, 1);
+    renderCart();
+}
+
+async function confirmSale() {
+    if (!saleCart.length) { showToast('Agrega al menos un producto', 'warning'); return; }
+    const customer_name = document.getElementById('saleCustomerName').value.trim();
+    const notes = document.getElementById('saleNotes').value.trim();
+    const items = saleCart.map(i => ({ product_id: i.id, product_name: i.name, quantity: i.quantity, unit_price: i.price }));
+    try {
+        await apiFetch('/orders', { method: 'POST', body: JSON.stringify({ customer_name, notes, items }) });
+        showToast('Venta registrada correctamente', 'success');
+        saleCart = [];
+        renderCart();
+        document.getElementById('saleCustomerName').value = '';
+        document.getElementById('saleNotes').value = '';
+        await loadProducts();
+        loadSellerOrders();
+    } catch (e) { showToast(e.message || 'Error al registrar venta', 'error'); }
+}
+
+async function loadSellerOrders() {
+    const container = document.getElementById('sellerOrdersList');
+    try {
+        const orders = await apiFetch('/orders');
+        if (!orders.length) { container.innerHTML = '<p style="color:#aaa;font-size:14px;">No hay ventas registradas aún.</p>'; return; }
+        container.innerHTML = orders.map(o => `
+            <div style="border:1px solid #eee;border-radius:12px;padding:16px;margin-bottom:12px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                    <div>
+                        <span style="font-weight:bold;color:#2f2c79;">Pedido #${o.id}</span>
+                        <span style="margin-left:12px;font-size:13px;color:#888;">${new Date(o.created_at).toLocaleString('es-MX')}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="font-weight:bold;color:#2f2c79;">$${parseFloat(o.total).toFixed(2)}</span>
+                        <select onchange="updateOrderStatus(${o.id}, this.value)" style="border:1px solid #ddd;border-radius:8px;padding:4px 8px;font-size:13px;">
+                            ${['pendiente','completado','cancelado'].map(s => <option value="${s}" ${o.status===s?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>).join('')}
+                        </select>
+                    </div>
+                </div>
+                ${o.notes ? <p style="font-size:13px;color:#666;margin:8px 0 0;">${o.notes}</p> : ''}
+                <div style="margin-top:10px;font-size:13px;">
+                    ${(o.items||[]).map(i => <span style="display:inline-block;background:#f5f5f5;border-radius:6px;padding:3px 8px;margin:2px;">${i.product_name} x${i.quantity}</span>).join('')}
+                </div>
+            </div>`).join('');
+    } catch (e) { container.innerHTML = '<p style="color:#e74c3c;">Error al cargar ventas.</p>'; }
+}
+
+async function updateOrderStatus(orderId, status) {
+    try {
+        await apiFetch(/orders/${orderId}/status, { method: 'PUT', body: JSON.stringify({ status }) });
+        showToast('Estado actualizado', 'success');
+    } catch (e) { showToast('Error al actualizar estado', 'error'); }
 }
 
 // ============================================================

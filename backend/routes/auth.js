@@ -6,6 +6,7 @@ const {
     forgotPassword, 
     resetPassword, 
     registerAdmin,
+    registerSeller,
     getSecurityQuestion,
     resetWithSecurity
 } = require('../controllers/authController');

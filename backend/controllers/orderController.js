@@ -11,7 +11,7 @@ const createOrder = async (req, res) => {
             user_id: null,
             seller_id: req.userId,
             total,
-            notes: notes || (customer_name ? Cliente: ${customer_name}${customer_email ? ' — ' + customer_email : ''} : null),
+            notes: notes || (customer_name ? 'Cliente: ' + customer_name + (customer_email ? ' - ' + customer_email : '') : null),
             items
         });
         res.status(201).json({ message: 'Pedido creado correctamente', order });

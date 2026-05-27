@@ -26,6 +26,7 @@ const favoriteRoutes = require('./routes/favorites');
 const promotionRoutes = require('./routes/promotions');
 const requestRoutes = require('./routes/requests');
 const adminRoutes = require('./routes/admin');
+const orderRoutes = require('./routes/orders');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
@@ -33,6 +34,7 @@ app.use('/api/favorites', favoriteRoutes);
 app.use('/api/promotions', promotionRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/orders', orderRoutes);
 
 // Ruta de salud
 app.get('/api/health', (req, res) => {

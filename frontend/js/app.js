@@ -227,6 +227,7 @@ function renderProducts() {
                     <div class="product-name">${searchTerm ? highlightMatch(p.name, searchTerm) : p.name}</div>
                     <div class="product-price">${parseFloat(p.price).toFixed(2)}</div>
                     <div>${stockLabel}</div>
+                    ${p.stock > 0 ? `<button onclick="addToUserCart({id:${p.id},name:'${p.name.replace(/'/g,"\\'")}',price:${p.price},stock:${p.stock}})" style="margin-top:8px;width:100%;background:#2f2c79;color:#fff;border:none;border-radius:10px;padding:7px 0;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🛒 Agregar al carrito</button>` : ''}
                 </div>`;
     }).join('');
 }
@@ -286,6 +287,27 @@ function initSearch() {
     searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { document.getElementById('suggestionsBox').style.display = 'none'; renderProducts(); } });
 }
 
+
+// ============================================================
+//  VALIDACIONES DE CAMPOS
+// ============================================================
+function blockInvalidNumKey(e) {
+    // Bloquea 'e', 'E', '+' en inputs numéricos
+    if (e.key === 'e' || e.key === 'E' || e.key === '+') {
+        e.preventDefault();
+    }
+}
+
+function limitDigitsInName(input) {
+    // Máximo 3 dígitos consecutivos en el nombre de producto
+    const val = input.value;
+    const fixed = val.replace(/(\d{4,})/g, (match) => match.slice(0, 3));
+    if (fixed !== val) {
+        input.value = fixed;
+        showToast('El nombre no puede tener más de 3 dígitos consecutivos', 'warning');
+    }
+}
+
 // ============================================================
 //  AUTENTICACIÓN
 // ============================================================
@@ -307,6 +329,7 @@ function showView(role) {
     } else if (role === 'user') {
         document.getElementById('userView').classList.add('active');
         document.getElementById('requestBtn').style.display = 'flex';
+        loadUserCartFromStorage();
         loadProducts().then(() => { renderCategories(); renderProducts(); });
         if (currentUserName) {
             document.getElementById('helloUser').textContent = 'Hola, ' + currentUserName.split(' ')[0];
@@ -792,6 +815,109 @@ function limpiarFormAgregar() {
     document.getElementById('prodImage').value = '';
 }
 
+
+// ============================================================
+//  CARRITO PERSISTENTE DEL USUARIO
+// ============================================================
+let userCart = [];   // [{id, name, price, stock, quantity}]
+
+function addToUserCart(product) {
+    const existing = userCart.find(i => i.id === product.id);
+    if (existing) {
+        if (existing.quantity >= product.stock) { showToast('Stock máximo alcanzado', 'warning'); return; }
+        existing.quantity++;
+    } else {
+        userCart.push({ ...product, quantity: 1 });
+    }
+    saveUserCartToStorage();
+    updateCartBadge();
+    showToast(`${product.name} añadido al carrito`, 'success');
+}
+
+function saveUserCartToStorage() {
+    // Guardamos en memoria (sessionStorage para la sesión activa)
+    sessionStorage.setItem('userCart_' + currentUserId, JSON.stringify(userCart));
+}
+
+function loadUserCartFromStorage() {
+    if (!currentUserId) return;
+    const saved = sessionStorage.getItem('userCart_' + currentUserId);
+    userCart = saved ? JSON.parse(saved) : [];
+    updateCartBadge();
+}
+
+function updateCartBadge() {
+    const badge = document.getElementById('cartBadge');
+    if (!badge) return;
+    const total = userCart.reduce((s, i) => s + i.quantity, 0);
+    if (total > 0) {
+        badge.textContent = total;
+        badge.style.display = 'inline-flex';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+function openCartModal() {
+    document.getElementById('userDropdown').classList.remove('open');
+    const body = document.getElementById('cartModalBody');
+    const totalEl = document.getElementById('cartModalTotal');
+    document.getElementById('cartModal').classList.add('active');
+
+    if (!userCart.length) {
+        body.innerHTML = '<p style="text-align:center;color:#aaa;padding:30px 0;">Tu carrito está vacío. 🛒</p>';
+        totalEl.textContent = '';
+        return;
+    }
+
+    body.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+            <thead><tr style="background:#f5f5f5;">
+                <th style="padding:8px;text-align:left;">Producto</th>
+                <th style="padding:8px;text-align:center;">Precio</th>
+                <th style="padding:8px;text-align:center;">Cantidad</th>
+                <th style="padding:8px;text-align:right;">Subtotal</th>
+                <th style="padding:8px;"></th>
+            </tr></thead>
+            <tbody>${userCart.map((item, idx) => `
+                <tr style="border-bottom:1px solid #eee;">
+                    <td style="padding:8px;">${item.name}</td>
+                    <td style="padding:8px;text-align:center;">$${item.price.toFixed(2)}</td>
+                    <td style="padding:8px;text-align:center;">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                            <button onclick="changeUserCartQty(${idx},-1)" style="background:#eee;border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:16px;">−</button>
+                            <span>${item.quantity}</span>
+                            <button onclick="changeUserCartQty(${idx},1)" style="background:#eee;border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:16px;">+</button>
+                        </div>
+                    </td>
+                    <td style="padding:8px;text-align:right;font-weight:bold;">$${(item.price * item.quantity).toFixed(2)}</td>
+                    <td style="padding:8px;text-align:center;"><button onclick="removeFromUserCart(${idx})" style="background:none;border:none;cursor:pointer;color:#e74c3c;font-size:16px;">🗑️</button></td>
+                </tr>`).join('')}
+            </tbody>
+        </table>`;
+    const total = userCart.reduce((s, i) => s + i.price * i.quantity, 0);
+    totalEl.textContent = `Total: $${total.toFixed(2)}`;
+}
+
+function changeUserCartQty(idx, delta) {
+    userCart[idx].quantity += delta;
+    if (userCart[idx].quantity <= 0) userCart.splice(idx, 1);
+    else if (userCart[idx].quantity > userCart[idx].stock) {
+        userCart[idx].quantity = userCart[idx].stock;
+        showToast('Stock máximo alcanzado', 'warning');
+    }
+    saveUserCartToStorage();
+    updateCartBadge();
+    openCartModal();
+}
+
+function removeFromUserCart(idx) {
+    userCart.splice(idx, 1);
+    saveUserCartToStorage();
+    updateCartBadge();
+    openCartModal();
+}
+
 // ============================================================
 //  PANEL VENDEDOR
 // ============================================================
@@ -889,17 +1015,44 @@ function removeFromCart(idx) {
     renderCart();
 }
 
+async function loadCustomerCart() {
+    const email = document.getElementById('saleCustomerEmail').value.trim();
+    if (!email) { showToast('Ingresa el correo del cliente', 'warning'); return; }
+    try {
+        const result = await apiFetch(`/auth/user-cart?email=${encodeURIComponent(email)}`);
+        if (!result.cart || !result.cart.length) {
+            showToast('Este cliente no tiene productos en su carrito', 'info'); return;
+        }
+        // Merge con carrito actual del vendedor
+        result.cart.forEach(item => {
+            const existing = saleCart.find(i => i.id === item.id);
+            if (existing) {
+                existing.quantity = Math.min(existing.quantity + item.quantity, item.stock);
+            } else {
+                saleCart.push({ id: item.id, name: item.name, price: item.price, stock: item.stock, quantity: item.quantity });
+            }
+        });
+        renderCart();
+        showToast(`Carrito de ${result.userName} cargado (${result.cart.length} producto${result.cart.length > 1 ? 's' : ''})`, 'success');
+    } catch (e) {
+        showToast(e.message || 'No se encontró el usuario o no tiene carrito', 'error');
+    }
+}
+
 async function confirmSale() {
     if (!saleCart.length) { showToast('Agrega al menos un producto', 'warning'); return; }
     const customer_name = document.getElementById('saleCustomerName').value.trim();
+    const customer_email = document.getElementById('saleCustomerEmail').value.trim();
     const notes = document.getElementById('saleNotes').value.trim();
     const items = saleCart.map(i => ({ product_id: i.id, product_name: i.name, quantity: i.quantity, unit_price: i.price }));
     try {
-        await apiFetch('/orders', { method: 'POST', body: JSON.stringify({ customer_name, notes, items }) });
+        await apiFetch('/orders', { method: 'POST', body: JSON.stringify({ customer_name, customer_email, notes, items }) });
         showToast('Venta registrada correctamente', 'success');
+        if (customer_email) showToast('Comprobante enviado al correo del cliente', 'info');
         saleCart = [];
         renderCart();
         document.getElementById('saleCustomerName').value = '';
+        document.getElementById('saleCustomerEmail').value = '';
         document.getElementById('saleNotes').value = '';
         await loadProducts();
         loadSellerOrders();
@@ -1186,6 +1339,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.addEventListener('click', () => {
         document.getElementById('userDropdown')?.classList.remove('open');
+    });
+    document.getElementById('openCartBtn').addEventListener('click', () => {
+        document.getElementById('userDropdown').classList.remove('open');
+        openCartModal();
     });
     document.getElementById('openFavoritesBtn').addEventListener('click', () => {
         document.getElementById('userDropdown').classList.remove('open');

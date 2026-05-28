@@ -715,7 +715,7 @@ function initAdminPanel() {
         item.addEventListener('click', () => {
             document.querySelectorAll('.admin-menu-item').forEach(i => i.classList.remove('active'));
             item.classList.add('active');
-            ['add','inventory','edit','promos','admins'].forEach(tab => {
+            ['add','inventory','edit','promos','admins','sellers'].forEach(tab => {
                 const el = document.getElementById('tab-' + tab);
                 if (el) el.style.display = (tab === item.dataset.tab) ? 'block' : 'none';
             });
@@ -723,6 +723,7 @@ function initAdminPanel() {
             if (item.dataset.tab === 'edit') refreshAdminTables();
             if (item.dataset.tab === 'promos') loadAdminPromotions();
             if (item.dataset.tab === 'admins') loadAdmins();
+            if (item.dataset.tab === 'sellers') loadSellers();
         });
     });
     const addBtn = document.getElementById('addProductBtn');
@@ -781,6 +782,8 @@ function initAdminPanel() {
     if (searchEditInput) searchEditInput.addEventListener('input', filterEditTable);
     const createAdminBtn = document.getElementById('createAdminBtn');
     if (createAdminBtn) createAdminBtn.addEventListener('click', createAdmin);
+    const createSellerBtn = document.getElementById('createSellerBtn');
+    if (createSellerBtn) createSellerBtn.addEventListener('click', createSeller);
     adminInitialized = true;
 }
 
@@ -935,6 +938,59 @@ async function updateOrderStatus(orderId, status) {
         await apiFetch(`/orders/${orderId}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
         showToast('Estado actualizado', 'success');
     } catch (e) { showToast('Error al actualizar estado', 'error'); }
+}
+
+
+// ============================================================
+//  GESTIÓN DE VENDEDORES (admin)
+// ============================================================
+async function loadSellers() {
+    try {
+        const sellers = await apiFetch('/admin/sellers');
+        const tbody = document.getElementById('sellersListBody');
+        if (!tbody) return;
+        if (!sellers.length) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#aaa;padding:20px;">No hay vendedores registrados aún.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = sellers.map(s => `
+            <tr>
+                <td>${s.name}</td>
+                <td>${s.email}</td>
+                <td>${new Date(s.created_at).toLocaleDateString('es-MX')}</td>
+                <td><button onclick="deleteSeller(${s.id}, '${s.name.replace(/'/g, "\'")}')" style="background:#E3000F;color:white;border:none;border-radius:20px;padding:4px 12px;cursor:pointer;">🗑️ Eliminar</button></td>
+            </tr>`).join('');
+    } catch (e) { console.error('Error cargando vendedores:', e); }
+}
+
+async function createSeller() {
+    const name = document.getElementById('newSellerName').value.trim();
+    const email = document.getElementById('newSellerEmail').value.trim();
+    const password = document.getElementById('newSellerPass').value.trim();
+    if (!name || !email || !password) { showToast('Completa todos los campos', 'warning'); return; }
+    if (!isStrongPassword(password)) return;
+    try {
+        await apiFetch('/auth/register/seller', { method: 'POST', body: JSON.stringify({ name, email, password }) });
+        showToast(`Vendedor "${name}" creado correctamente`, 'success');
+        document.getElementById('newSellerName').value = '';
+        document.getElementById('newSellerEmail').value = '';
+        document.getElementById('newSellerPass').value = '';
+        loadSellers();
+    } catch (e) { showToast('Error al crear vendedor: ' + (e.message || ''), 'error'); }
+}
+
+async function deleteSeller(sellerId, sellerName) {
+    document.getElementById('confirmDeleteTitle').textContent = '¿Eliminar vendedor?';
+    document.getElementById('confirmDeleteMsg').textContent = `Se eliminará a "${sellerName}" del sistema. Sus ventas registradas se conservarán.`;
+    document.getElementById('confirmDeleteModal').classList.add('active');
+    document.getElementById('confirmDeleteBtn').onclick = async () => {
+        closeModal('confirmDeleteModal');
+        try {
+            await apiFetch(`/admin/sellers/${sellerId}`, { method: 'DELETE' });
+            showToast('Vendedor eliminado', 'success');
+            loadSellers();
+        } catch (e) { showToast('Error al eliminar: ' + e.message, 'error'); }
+    };
 }
 
 // ============================================================

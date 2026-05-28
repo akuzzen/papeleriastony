@@ -834,16 +834,33 @@ function addToUserCart(product) {
     showToast(`${product.name} añadido al carrito`, 'success');
 }
 
-function saveUserCartToStorage() {
-    // Guardamos en memoria (sessionStorage para la sesión activa)
+async function saveUserCartToStorage() {
+    // Persiste en BD via API; también en sessionStorage como caché local
     sessionStorage.setItem('userCart_' + currentUserId, JSON.stringify(userCart));
+    try {
+        await apiFetch('/auth/user-cart', { method: 'PUT', body: JSON.stringify({ cart: userCart }) });
+    } catch (e) {
+        console.warn('No se pudo sincronizar carrito con servidor:', e.message);
+    }
 }
 
-function loadUserCartFromStorage() {
+async function loadUserCartFromStorage() {
     if (!currentUserId) return;
-    const saved = sessionStorage.getItem('userCart_' + currentUserId);
-    userCart = saved ? JSON.parse(saved) : [];
+    // Primero cargar de sessionStorage para respuesta inmediata
+    const cached = sessionStorage.getItem('userCart_' + currentUserId);
+    userCart = cached ? JSON.parse(cached) : [];
     updateCartBadge();
+    // Luego sincronizar con BD (fuente de verdad)
+    try {
+        const data = await apiFetch('/auth/user-cart');
+        if (data.cart && Array.isArray(data.cart)) {
+            userCart = data.cart;
+            sessionStorage.setItem('userCart_' + currentUserId, JSON.stringify(userCart));
+            updateCartBadge();
+        }
+    } catch (e) {
+        console.warn('No se pudo cargar carrito desde servidor:', e.message);
+    }
 }
 
 function updateCartBadge() {
@@ -1019,7 +1036,7 @@ async function loadCustomerCart() {
     const email = document.getElementById('saleCustomerEmail').value.trim();
     if (!email) { showToast('Ingresa el correo del cliente', 'warning'); return; }
     try {
-        const result = await apiFetch(`/auth/user-cart?email=${encodeURIComponent(email)}`);
+        const result = await apiFetch(`/auth/customer-cart?email=${encodeURIComponent(email)}`);
         if (!result.cart || !result.cart.length) {
             showToast('Este cliente no tiene productos en su carrito', 'info'); return;
         }

@@ -12,6 +12,7 @@ const {
 } = require('../controllers/authController');
 const { authMiddleware } = require('../middleware/auth');
 const pool = require('../config/database');
+const User = require('../models/User');
 
 const router = express.Router();
 

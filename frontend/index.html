@@ -49,6 +49,9 @@
 				            <div class="user-dropdown-item" id="openFavoritesBtn">
 				                <i class="fas fa-heart" style="color:#E3000F;"></i> Mis Favoritos
 				            </div>
+				            <div class="user-dropdown-item" id="openProfileBtn">
+				                <i class="fas fa-user-circle" style="color:#0033A0;"></i> Mi Perfil
+				            </div>
 				            <div class="user-dropdown-item" id="openCartBtn">
 				                <i class="fas fa-shopping-cart" style="color:#2f2c79;"></i> Mi Carrito <span id="cartBadge" style="background:#E3B000;color:#0A1128;border-radius:50%;width:18px;height:18px;font-size:11px;font-weight:800;display:none;align-items:center;justify-content:center;margin-left:4px;">0</span>
 				            </div>
@@ -97,7 +100,7 @@
             <div class="admin-header">
                 <div class="logo-white">
 				    <img src="assets/images/logo.webp" alt="Papelerías Tony" style="height: 36px; vertical-align: middle;">
-				    <span style="font-size: 0.8rem; opacity: 0.85; margin-left: 8px;">| Admin</span>
+				    <span id="adminNameSpan" style="font-size: 0.8rem; opacity: 0.85; margin-left: 8px;">| Admin</span>
 				</div>
                 <div><i class="fas fa-user-shield"></i> Panel de Administración</div>
             </div>
@@ -288,7 +291,7 @@
 		    <button class="back-btn" id="logoutSellerBtn"><i class="fas fa-arrow-left"></i> Cerrar sesión</button>
 		    <div class="admin-header">
 		        <div class="admin-logo">
-		            <img src="assets/img/logo.png" alt="Tony" onerror="this.style.display='none'">
+		            <img src="assets/images/logo.webp" alt="Papelerías Tony" style="height:36px;vertical-align:middle;">
 		            <span id="sellerName" style="color:#fff;font-weight:bold;margin-left:8px;"></span>
 		        </div>
 		        <span style="color:#fff;font-size:14px;">🛒 Panel de Ventas</span>
@@ -306,7 +309,7 @@
 		                    <input type="text" id="saleCustomerName" class="form-control" placeholder="Nombre del cliente">
 		                </div>
 		                <div style="flex:1;min-width:200px;">
-		                    <label style="font-size:13px;font-weight:bold;color:#444;display:block;margin-bottom:6px;">Correo cliente</label>
+		                    <label style="font-size:13px;font-weight:bold;color:#444;display:block;margin-bottom:6px;">Correo cliente (para cargar carrito o enviar comprobante)</label>
 		                    <div style="display:flex;gap:8px;">
 		                        <input type="email" id="saleCustomerEmail" class="form-control" placeholder="cliente@email.com" style="flex:1;">
 		                        <button onclick="loadCustomerCart()" style="background:#2f2c79;color:#fff;border:none;border-radius:10px;padding:0 14px;cursor:pointer;font-size:13px;white-space:nowrap;">🛒 Cargar carrito</button>
@@ -515,6 +518,25 @@
         </div>
     </div>
 	
+	<!-- Modal: Mi Perfil -->
+	<div class="modal" id="profileModal">
+	    <div class="modal-content" style="max-width:420px;text-align:center;">
+	        <div class="close-modal" onclick="closeModal('profileModal')">✕</div>
+	        <h3><i class="fas fa-user-circle" style="color:#0033A0;margin-right:8px;"></i>Mi Perfil</h3>
+	        <div style="margin:20px 0;">
+	            <div id="profileAvatarPreview" style="width:96px;height:96px;border-radius:50%;background:#f0f0f0;margin:0 auto 12px;overflow:hidden;border:3px solid #2f2c79;display:flex;align-items:center;justify-content:center;">
+	                <i class="fas fa-user" style="font-size:40px;color:#ccc;" id="profileAvatarIcon"></i>
+	                <img id="profileAvatarImg" src="" style="display:none;width:100%;height:100%;object-fit:cover;">
+	            </div>
+	            <p id="profileNameDisplay" style="font-weight:700;font-size:1.1rem;color:#0033A0;margin:0 0 4px;"></p>
+	            <p id="profileEmailDisplay" style="font-size:0.85rem;color:#888;margin:0 0 16px;"></p>
+	            <label style="display:block;text-align:left;font-weight:600;font-size:0.85rem;margin-bottom:6px;">📷 Foto de perfil</label>
+	            <input type="file" id="profileAvatarInput" accept="image/*" class="form-control" style="margin-bottom:12px;">
+	            <button class="btn" id="saveProfileBtn" style="width:100%;">💾 Guardar foto de perfil</button>
+	        </div>
+	    </div>
+	</div>
+
 	<!-- Modal: Mi Carrito (usuario) -->
 	<div class="modal" id="cartModal">
 	    <div class="modal-content" style="max-width:640px;">

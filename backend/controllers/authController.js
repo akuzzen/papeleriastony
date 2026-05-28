@@ -224,12 +224,17 @@ const registerSeller = async (req, res) => {
         if (!name || !email || !password) {
             return res.status(400).json({ message: 'Todos los campos son requeridos' });
         }
+        if (!isStrongPassword(password)) {
+            return res.status(400).json({
+                message: 'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial (!@#$%^&*)'
+            });
+        }
         const existing = await User.findByEmail(email);
         if (existing) {
             return res.status(400).json({ message: 'El correo ya está registrado' });
         }
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const user = await User.create({ name, email, password: hashedPassword, role: 'seller' });
+        // User.create ya hace el hash internamente — NO pre-hashear aquí
+        const user = await User.create({ name, email, password, role: 'seller' });
         res.status(201).json({ message: 'Vendedor creado correctamente', user: { id: user.id, name: user.name, email: user.email, role: user.role } });
     } catch (error) {
         console.error(error);

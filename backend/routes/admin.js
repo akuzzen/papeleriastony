@@ -40,4 +40,37 @@ router.delete('/users/:id', authMiddleware, adminMiddleware, async (req, res) =>
     }
 });
 
+
+// ── VENDEDORES ──────────────────────────────────────────────
+
+// Listar todos los vendedores
+router.get('/sellers', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT id, name, email, role, created_at FROM users WHERE role = $1 ORDER BY created_at DESC',
+            ['seller']
+        );
+        res.json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener vendedores' });
+    }
+});
+
+// Eliminar vendedor
+router.delete('/sellers/:id', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const check = await pool.query('SELECT * FROM users WHERE id = $1 AND role = $2', [id, 'seller']);
+        if (check.rows.length === 0) {
+            return res.status(404).json({ message: 'Vendedor no encontrado' });
+        }
+        await pool.query('DELETE FROM users WHERE id = $1', [id]);
+        res.json({ message: 'Vendedor eliminado correctamente' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al eliminar vendedor' });
+    }
+});
+
 module.exports = router;

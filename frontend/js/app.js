@@ -855,9 +855,12 @@ async function loadUserAvatar() {
     try {
         const profile = await apiFetch('/auth/profile');
         if (profile.avatar_url) {
+            const url = profile.avatar_url.startsWith('/assets/')
+                ? BACKEND_URL + profile.avatar_url
+                : profile.avatar_url;
             const iconEl = document.getElementById('profileIcon');
             if (iconEl) {
-                iconEl.style.backgroundImage = `url(${profile.avatar_url})`;
+                iconEl.style.backgroundImage = `url(${url})`;
                 iconEl.style.backgroundSize = 'cover';
                 iconEl.style.backgroundPosition = 'center';
                 iconEl.style.borderRadius = '50%';
@@ -994,7 +997,10 @@ async function openProfileModal() {
         document.getElementById('profileNameDisplay').textContent = profile.name;
         document.getElementById('profileEmailDisplay').textContent = profile.email;
         if (profile.avatar_url) {
-            document.getElementById('profileAvatarImg').src = profile.avatar_url;
+            const avatarUrl = profile.avatar_url.startsWith('/assets/')
+                ? BACKEND_URL + profile.avatar_url
+                : profile.avatar_url;
+            document.getElementById('profileAvatarImg').src = avatarUrl;
             document.getElementById('profileAvatarImg').style.display = 'block';
             document.getElementById('profileAvatarIcon').style.display = 'none';
         } else {
@@ -1019,8 +1025,10 @@ async function saveProfileAvatar() {
         });
         if (!res.ok) throw new Error();
         const data = await res.json();
-        // Show preview immediately
-        const url = data.avatar_url;
+        // Show preview immediately — ensure absolute URL
+        const url = data.avatar_url.startsWith('/assets/')
+            ? BACKEND_URL + data.avatar_url
+            : data.avatar_url;
         document.getElementById('profileAvatarImg').src = url;
         document.getElementById('profileAvatarImg').style.display = 'block';
         document.getElementById('profileAvatarIcon').style.display = 'none';
@@ -1186,7 +1194,15 @@ async function loadSellerOrders() {
     try {
         const orders = await apiFetch('/orders');
         if (!orders.length) { container.innerHTML = '<p style="color:#aaa;font-size:14px;">No hay ventas registradas aún.</p>'; return; }
-        container.innerHTML = orders.map(o => `
+        container.innerHTML = orders.map(o => {
+            // Extraer email del cliente guardado en notes con formato "Cliente: nombre - email"
+            let clientEmail = '';
+            if (o.notes) {
+                const emailMatch = o.notes.match(/[\w.-]+@[\w.-]+\.\w+/);
+                if (emailMatch) clientEmail = emailMatch[0];
+            }
+            const safeEmail = clientEmail.replace(/'/g, "\\'");
+            return `
             <div style="border:1px solid #eee;border-radius:12px;padding:16px;margin-bottom:12px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
                     <div>
@@ -1195,7 +1211,7 @@ async function loadSellerOrders() {
                     </div>
                     <div style="display:flex;align-items:center;gap:10px;">
                         <span style="font-weight:bold;color:#2f2c79;">$${parseFloat(o.total).toFixed(2)}</span>
-                        <select onchange="updateOrderStatus(${o.id}, this.value)" style="border:1px solid #ddd;border-radius:8px;padding:4px 8px;font-size:13px;">
+                        <select onchange="updateOrderStatus(${o.id}, this.value, '${safeEmail}')" style="border:1px solid #ddd;border-radius:8px;padding:4px 8px;font-size:13px;">
                             ${['pendiente','completado','cancelado'].map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}
                         </select>
                     </div>
@@ -1204,24 +1220,21 @@ async function loadSellerOrders() {
                 <div style="margin-top:10px;font-size:13px;">
                     ${(o.items||[]).map(i => `<span style="display:inline-block;background:#f5f5f5;border-radius:6px;padding:3px 8px;margin:2px;">${i.product_name} x${i.quantity}</span>`).join('')}
                 </div>
-            </div>`).join('');
+            </div>`;
+        }).join('');
     } catch (e) { container.innerHTML = '<p style="color:#e74c3c;">Error al cargar ventas.</p>'; }
 }
 
-async function updateOrderStatus(orderId, status) {
+async function updateOrderStatus(orderId, status, clientEmail = '') {
     try {
         await apiFetch(`/orders/${orderId}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
         showToast('Estado actualizado', 'success');
         // Si la venta se marca como completada, limpiar el carrito del cliente
-        if (status === 'completado') {
-            const emailEl = document.getElementById('saleCustomerEmail');
-            const email = emailEl ? emailEl.value.trim() : '';
-            if (email) {
-                try {
-                    await apiFetch('/auth/clear-customer-cart', { method: 'DELETE', body: JSON.stringify({ email }) });
-                    showToast('Carrito del cliente limpiado', 'info');
-                } catch (_) { /* silencioso si falla */ }
-            }
+        if (status === 'completado' && clientEmail) {
+            try {
+                await apiFetch('/auth/clear-customer-cart', { method: 'DELETE', body: JSON.stringify({ email: clientEmail }) });
+                showToast('Carrito del cliente limpiado', 'info');
+            } catch (_) { /* silencioso si falla */ }
         }
     } catch (e) { showToast('Error al actualizar estado', 'error'); }
 }

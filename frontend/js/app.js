@@ -918,13 +918,13 @@ async function loadSellerOrders() {
                     <div style="display:flex;align-items:center;gap:10px;">
                         <span style="font-weight:bold;color:#2f2c79;">$${parseFloat(o.total).toFixed(2)}</span>
                         <select onchange="updateOrderStatus(${o.id}, this.value)" style="border:1px solid #ddd;border-radius:8px;padding:4px 8px;font-size:13px;">
-                            ${['pendiente','completado','cancelado'].map(s => <option value="${s}" ${o.status===s?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>).join('')}
+                            ${['pendiente','completado','cancelado'].map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}
                         </select>
                     </div>
                 </div>
-                ${o.notes ? <p style="font-size:13px;color:#666;margin:8px 0 0;">${o.notes}</p> : ''}
+                ${o.notes ? `<p style="font-size:13px;color:#666;margin:8px 0 0;">${o.notes}</p>` : ''}
                 <div style="margin-top:10px;font-size:13px;">
-                    ${(o.items||[]).map(i => <span style="display:inline-block;background:#f5f5f5;border-radius:6px;padding:3px 8px;margin:2px;">${i.product_name} x${i.quantity}</span>).join('')}
+                    ${(o.items||[]).map(i => `<span style="display:inline-block;background:#f5f5f5;border-radius:6px;padding:3px 8px;margin:2px;">${i.product_name} x${i.quantity}</span>`).join('')}
                 </div>
             </div>`).join('');
     } catch (e) { container.innerHTML = '<p style="color:#e74c3c;">Error al cargar ventas.</p>'; }
@@ -932,7 +932,7 @@ async function loadSellerOrders() {
 
 async function updateOrderStatus(orderId, status) {
     try {
-        await apiFetch(/orders/${orderId}/status, { method: 'PUT', body: JSON.stringify({ status }) });
+        await apiFetch(`/orders/${orderId}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
         showToast('Estado actualizado', 'success');
     } catch (e) { showToast('Error al actualizar estado', 'error'); }
 }

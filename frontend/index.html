@@ -49,6 +49,9 @@
 				            <div class="user-dropdown-item" id="openFavoritesBtn">
 				                <i class="fas fa-heart" style="color:#E3000F;"></i> Mis Favoritos
 				            </div>
+				            <div class="user-dropdown-item" id="openCartBtn">
+				                <i class="fas fa-shopping-cart" style="color:#2f2c79;"></i> Mi Carrito <span id="cartBadge" style="background:#E3B000;color:#0A1128;border-radius:50%;width:18px;height:18px;font-size:11px;font-weight:800;display:none;align-items:center;justify-content:center;margin-left:4px;">0</span>
+				            </div>
 				        </div>
 				    </div>
 				</div>
@@ -112,11 +115,11 @@
 				    <h3>➕ Agregar nuevo producto</h3>
 				    <div class="form-group">
 				        <label>Nombre</label>
-				        <input type="text" class="form-control" id="prodName" placeholder="Ej: Cámara profesional">
+				        <input type="text" class="form-control" id="prodName" placeholder="Ej: Cámara profesional" oninput="limitDigitsInName(this)">
 				    </div>
 				    <div class="form-group">
 				        <label>Precio ($)</label>
-				        <input type="number" class="form-control" id="prodPrice" placeholder="299.99">
+				        <input type="number" class="form-control" id="prodPrice" placeholder="299.99" min="0" step="0.01" onkeydown="blockInvalidNumKey(event)">
 				    </div>
 				    <div class="form-group">
 				        <label>Imagen</label>
@@ -138,7 +141,7 @@
 				    </div>
 				    <div class="form-group">
 				        <label>Stock</label>
-				        <input type="number" class="form-control" id="prodStock" placeholder="50">
+				        <input type="number" class="form-control" id="prodStock" placeholder="50" min="0" onkeydown="blockInvalidNumKey(event)">
 				    </div>
 				    <div class="form-group">
 				        <label>Emoji</label>
@@ -301,6 +304,13 @@
 		                <div style="flex:1;min-width:200px;">
 		                    <label style="font-size:13px;font-weight:bold;color:#444;display:block;margin-bottom:6px;">Cliente (opcional)</label>
 		                    <input type="text" id="saleCustomerName" class="form-control" placeholder="Nombre del cliente">
+		                </div>
+		                <div style="flex:1;min-width:200px;">
+		                    <label style="font-size:13px;font-weight:bold;color:#444;display:block;margin-bottom:6px;">Correo cliente (para cargar carrito o enviar comprobante)</label>
+		                    <div style="display:flex;gap:8px;">
+		                        <input type="email" id="saleCustomerEmail" class="form-control" placeholder="cliente@email.com" style="flex:1;">
+		                        <button onclick="loadCustomerCart()" style="background:#2f2c79;color:#fff;border:none;border-radius:10px;padding:0 14px;cursor:pointer;font-size:13px;white-space:nowrap;">🛒 Cargar carrito</button>
+		                    </div>
 		                </div>
 		                <div style="flex:1;min-width:200px;">
 		                    <label style="font-size:13px;font-weight:bold;color:#444;display:block;margin-bottom:6px;">Notas</label>
@@ -505,6 +515,16 @@
         </div>
     </div>
 	
+	<!-- Modal: Mi Carrito (usuario) -->
+	<div class="modal" id="cartModal">
+	    <div class="modal-content" style="max-width:640px;">
+	        <div class="close-modal" onclick="closeModal('cartModal')">✕</div>
+	        <h3><i class="fas fa-shopping-cart" style="color:#2f2c79;margin-right:8px;"></i>Mi Carrito</h3>
+	        <div id="cartModalBody" style="margin-top:16px;"></div>
+	        <div id="cartModalTotal" style="text-align:right;font-size:18px;font-weight:bold;color:#2f2c79;margin-top:12px;"></div>
+	    </div>
+	</div>
+	
 	<!-- Sistema de notificaciones toast -->
 	<div id="toastContainer" style="position:fixed; top:24px; right:24px; z-index:99999; display:flex; flex-direction:column; gap:10px; pointer-events:none;"></div>
 
@@ -519,7 +539,7 @@
 	        </div>
 	        <div class="form-group">
 	            <label>Precio ($)</label>
-	            <input type="number" class="form-control" id="editProductPrice" step="0.01" min="0">
+	            <input type="number" class="form-control" id="editProductPrice" step="0.01" min="0" onkeydown="blockInvalidNumKey(event)">
 	        </div>
 	        <button class="btn" id="editProductConfirmBtn" style="width:100%;margin-top:8px;">💾 Guardar cambios</button>
 	    </div>

@@ -319,6 +319,8 @@ function showView(role) {
     document.getElementById('requestBtn').style.display = 'none';
     if (role === 'admin') {
         document.getElementById('adminView').classList.add('active');
+        const adminSpan = document.getElementById('adminNameSpan');
+        if (adminSpan && currentUserName) adminSpan.textContent = '| ' + currentUserName.split(' ')[0];
         initAdminPanel();
         startInactivityTracking();
     } else if (role === 'seller') {
@@ -330,6 +332,8 @@ function showView(role) {
         document.getElementById('userView').classList.add('active');
         document.getElementById('requestBtn').style.display = 'flex';
         loadUserCartFromStorage();
+        loadUserAvatar();
+        renderCartFloatingBtn();
         loadProducts().then(() => { renderCategories(); renderProducts(); });
         if (currentUserName) {
             document.getElementById('helloUser').textContent = 'Hola, ' + currentUserName.split(' ')[0];
@@ -523,7 +527,7 @@ async function saveProductEdit(productId) {
         const newPrice = parseFloat(document.getElementById('editProductPrice').value);
         if (!newName) { showToast('El nombre no puede estar vacío', 'warning'); return; }
         if (isDuplicateProductName(newName, productId)) { showToast(`Ya existe otro producto con el nombre "${newName}"`, 'error'); return; }
-        if (isNaN(newPrice)) { showToast('Precio inválido', 'error'); return; }
+        if (isNaN(newPrice) || newPrice <= 0) { showToast('El precio debe ser mayor a 0', 'warning'); return; }
         closeModal('editProductModal');
         const fileInput = document.getElementById(`edit-file-${productId}`);
         const imageFile = fileInput ? fileInput.files[0] : null;
@@ -760,6 +764,9 @@ function initAdminPanel() {
             const icon = document.getElementById('prodIcon').value.trim();
             const imageFile = document.getElementById('prodImage').files[0];
             if (!name || isNaN(price)) { showToast('Completa nombre y precio', 'warning'); return; }
+            if (price < 0) { showToast('El precio no puede ser negativo', 'warning'); return; }
+            if (price === 0) { showToast('El precio debe ser mayor a 0', 'warning'); return; }
+            if (stock <= 0) { showToast('El stock debe ser mayor a 0 para agregar el producto', 'warning'); return; }
             if (isDuplicateProductName(name)) { showToast(`Ya existe un producto con el nombre "${name}"`, 'error'); return; }
             const fd = new FormData();
             fd.append('name', name); fd.append('price', price);
@@ -844,6 +851,26 @@ async function saveUserCartToStorage() {
     }
 }
 
+async function loadUserAvatar() {
+    try {
+        const profile = await apiFetch('/auth/profile');
+        if (profile.avatar_url) {
+            const iconEl = document.getElementById('profileIcon');
+            if (iconEl) {
+                iconEl.style.backgroundImage = `url(${profile.avatar_url})`;
+                iconEl.style.backgroundSize = 'cover';
+                iconEl.style.backgroundPosition = 'center';
+                iconEl.style.borderRadius = '50%';
+                iconEl.className = '';
+                iconEl.style.width = '32px';
+                iconEl.style.height = '32px';
+                iconEl.style.display = 'inline-block';
+                iconEl.style.cursor = 'pointer';
+            }
+        }
+    } catch (_) {}
+}
+
 async function loadUserCartFromStorage() {
     if (!currentUserId) return;
     // Primero cargar de sessionStorage para respuesta inmediata
@@ -873,6 +900,27 @@ function updateCartBadge() {
     } else {
         badge.style.display = 'none';
     }
+    // Actualizar también el badge del botón flotante
+    const floatBadge = document.getElementById('cartFloatBadge');
+    if (floatBadge) {
+        floatBadge.textContent = total;
+        floatBadge.style.display = total > 0 ? 'flex' : 'none';
+    }
+}
+
+function renderCartFloatingBtn() {
+    // Inyectar botón flotante de carrito si no existe
+    if (document.getElementById('cartFloatingBtn')) return;
+    const btn = document.createElement('button');
+    btn.id = 'cartFloatingBtn';
+    btn.className = 'cart-floating-btn';
+    btn.innerHTML = `<i class="fas fa-shopping-cart"></i> <span class="cart-float-label">Mi Carrito</span><span id="cartFloatBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#E3000F;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:800;align-items:center;justify-content:center;">${userCart.reduce((s,i)=>s+i.quantity,0)}</span>`;
+    btn.style.cssText = 'position:fixed;bottom:85px;right:25px;background:#2f2c79;color:#fff;border:none;border-radius:60px;padding:12px 22px;font-family:Montserrat,sans-serif;font-weight:700;font-size:0.88rem;cursor:pointer;display:flex;align-items:center;gap:8px;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.2);transition:transform 0.2s,background 0.2s;';
+    btn.addEventListener('click', openCartModal);
+    btn.addEventListener('mouseenter', () => btn.style.transform = 'translateY(-2px)');
+    btn.addEventListener('mouseleave', () => btn.style.transform = '');
+    document.querySelector('.main-wrapper') ? document.querySelector('.main-wrapper').appendChild(btn) : document.body.appendChild(btn);
+    updateCartBadge();
 }
 
 function openCartModal() {
@@ -933,6 +981,63 @@ function removeFromUserCart(idx) {
     saveUserCartToStorage();
     updateCartBadge();
     openCartModal();
+}
+
+
+// ============================================================
+//  PERFIL DE USUARIO (foto de perfil)
+// ============================================================
+async function openProfileModal() {
+    document.getElementById('userDropdown').classList.remove('open');
+    try {
+        const profile = await apiFetch('/auth/profile');
+        document.getElementById('profileNameDisplay').textContent = profile.name;
+        document.getElementById('profileEmailDisplay').textContent = profile.email;
+        if (profile.avatar_url) {
+            document.getElementById('profileAvatarImg').src = profile.avatar_url;
+            document.getElementById('profileAvatarImg').style.display = 'block';
+            document.getElementById('profileAvatarIcon').style.display = 'none';
+        } else {
+            document.getElementById('profileAvatarImg').style.display = 'none';
+            document.getElementById('profileAvatarIcon').style.display = 'block';
+        }
+    } catch (e) { console.error(e); }
+    document.getElementById('profileModal').classList.add('active');
+}
+
+async function saveProfileAvatar() {
+    const file = document.getElementById('profileAvatarInput').files[0];
+    if (!file) { showToast('Selecciona una imagen primero', 'warning'); return; }
+    if (file.size > 2 * 1024 * 1024) { showToast('La imagen no debe superar 2MB', 'warning'); return; }
+    const fd = new FormData();
+    fd.append('avatar', file);
+    try {
+        const res = await fetch(`${API_URL}/auth/avatar`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${currentToken}` },
+            body: fd
+        });
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        // Show preview immediately
+        const url = data.avatar_url;
+        document.getElementById('profileAvatarImg').src = url;
+        document.getElementById('profileAvatarImg').style.display = 'block';
+        document.getElementById('profileAvatarIcon').style.display = 'none';
+        // Also update profile icon in header
+        const iconEl = document.getElementById('profileIcon');
+        if (iconEl) {
+            iconEl.style.backgroundImage = `url(${url})`;
+            iconEl.style.backgroundSize = 'cover';
+            iconEl.style.backgroundPosition = 'center';
+            iconEl.style.borderRadius = '50%';
+            iconEl.className = '';
+            iconEl.style.width = '32px';
+            iconEl.style.height = '32px';
+            iconEl.style.display = 'inline-block';
+        }
+        showToast('Foto de perfil actualizada', 'success');
+    } catch (e) { showToast('Error al guardar foto de perfil', 'error'); }
 }
 
 // ============================================================
@@ -1107,6 +1212,17 @@ async function updateOrderStatus(orderId, status) {
     try {
         await apiFetch(`/orders/${orderId}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
         showToast('Estado actualizado', 'success');
+        // Si la venta se marca como completada, limpiar el carrito del cliente
+        if (status === 'completado') {
+            const emailEl = document.getElementById('saleCustomerEmail');
+            const email = emailEl ? emailEl.value.trim() : '';
+            if (email) {
+                try {
+                    await apiFetch('/auth/clear-customer-cart', { method: 'DELETE', body: JSON.stringify({ email }) });
+                    showToast('Carrito del cliente limpiado', 'info');
+                } catch (_) { /* silencioso si falla */ }
+            }
+        }
     } catch (e) { showToast('Error al actualizar estado', 'error'); }
 }
 
@@ -1357,6 +1473,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', () => {
         document.getElementById('userDropdown')?.classList.remove('open');
     });
+    const openProfileBtn = document.getElementById('openProfileBtn');
+    if (openProfileBtn) openProfileBtn.addEventListener('click', openProfileModal);
+    const saveProfileBtn = document.getElementById('saveProfileBtn');
+    if (saveProfileBtn) saveProfileBtn.addEventListener('click', saveProfileAvatar);
     document.getElementById('openCartBtn').addEventListener('click', () => {
         document.getElementById('userDropdown').classList.remove('open');
         openCartModal();

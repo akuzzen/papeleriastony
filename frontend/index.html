@@ -104,6 +104,7 @@
 				<div class="admin-menu-item" data-tab="edit">Editar productos</div>
 				<div class="admin-menu-item" data-tab="promos">Promociones</div>
 				<div class="admin-menu-item" data-tab="admins">Administradores</div> <!-- ✅ NUEVO -->
+				<div class="admin-menu-item" data-tab="sellers">Vendedores</div>
 			</div>
             <div class="admin-panel">
                 <!-- Agregar productos -->
@@ -242,6 +243,39 @@
 						<tbody id="adminsListBody"></tbody>
 					</table>
 				</div>
+
+				<!-- ── TAB VENDEDORES ── -->
+				<div class="admin-card" id="tab-sellers" style="display: none;">
+					<h3>🧑‍💼 Gestionar Vendedores</h3>
+
+					<!-- Formulario para agregar nuevo vendedor -->
+					<div style="background: #F5F5F5; border-radius: 16px; padding: 15px; margin-bottom: 20px;">
+						<h4>➕ Agregar nuevo vendedor</h4>
+						<div class="form-group">
+							<label>Nombre completo</label>
+							<input type="text" id="newSellerName" class="form-control" placeholder="Ana García">
+						</div>
+						<div class="form-group">
+							<label>Correo electrónico</label>
+							<input type="email" id="newSellerEmail" class="form-control" placeholder="vendedor@ejemplo.com">
+						</div>
+						<div class="form-group">
+							<label>Contraseña</label>
+							<input type="password" id="newSellerPass" class="form-control" placeholder="••••••••">
+						</div>
+						<button class="btn" id="createSellerBtn">CREAR VENDEDOR</button>
+					</div>
+
+					<!-- Lista de vendedores existentes -->
+					<h4>📋 Vendedores registrados</h4>
+					<table class="inventory-table">
+						<thead>
+							<tr><th>Nombre</th><th>Correo</th><th>Fecha de registro</th><th>Acciones</th></tr>
+						</thead>
+						<tbody id="sellersListBody"></tbody>
+					</table>
+				</div>
+
 				
             </div>
         </div>

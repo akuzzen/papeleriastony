@@ -84,4 +84,47 @@ router.get('/customer-cart', authMiddleware, async (req, res) => {
     }
 });
 
+// Eliminar carrito de cliente por email (cuando venta se completa)
+router.delete('/clear-customer-cart', authMiddleware, async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ message: 'Correo requerido' });
+        const user = await User.findByEmail(email);
+        if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+        await pool.query('DELETE FROM user_carts WHERE user_id = $1', [user.id]);
+        res.json({ message: 'Carrito del cliente limpiado' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Error al limpiar carrito' });
+    }
+});
+
+// Subir foto de perfil (POST /auth/avatar)
+const multer = require('multer');
+const path = require('path');
+const avatarStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, path.join(__dirname, '../../frontend/assets/images')),
+    filename: (req, file, cb) => cb(null, `avatar_${req.userId}_${Date.now()}${path.extname(file.originalname)}`)
+});
+const avatarUpload = multer({
+    storage: avatarStorage,
+    limits: { fileSize: 2 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        if (!file.mimetype.startsWith('image/')) return cb(new Error('Solo imágenes'));
+        cb(null, true);
+    }
+});
+
+router.post('/avatar', authMiddleware, avatarUpload.single('avatar'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ message: 'No se recibió imagen' });
+        const avatar_url = `/assets/images/${req.file.filename}`;
+        await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2', [avatar_url, req.userId]);
+        res.json({ message: 'Avatar actualizado', avatar_url });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Error al guardar avatar' });
+    }
+});
+
 module.exports = router;

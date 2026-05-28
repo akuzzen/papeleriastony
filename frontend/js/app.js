@@ -359,10 +359,14 @@ function logout() {
     currentToken = null;
     currentUserId = null;
     saleCart = [];
+    userCart = [];
     products = [];
     sessionStorage.removeItem('papeleriastony_token');
     document.getElementById('loginEmail').value = '';
     document.getElementById('loginPass').value = '';
+    // Eliminar botón flotante de carrito del DOM al cerrar sesión
+    const floatingBtn = document.getElementById('cartFloatingBtn');
+    if (floatingBtn) floatingBtn.remove();
     stopInactivityTracking();
 }
 
@@ -1195,13 +1199,8 @@ async function loadSellerOrders() {
         const orders = await apiFetch('/orders');
         if (!orders.length) { container.innerHTML = '<p style="color:#aaa;font-size:14px;">No hay ventas registradas aún.</p>'; return; }
         container.innerHTML = orders.map(o => {
-            // Extraer email del cliente guardado en notes con formato "Cliente: nombre - email"
-            let clientEmail = '';
-            if (o.notes) {
-                const emailMatch = o.notes.match(/[\w.-]+@[\w.-]+\.\w+/);
-                if (emailMatch) clientEmail = emailMatch[0];
-            }
-            const safeEmail = clientEmail.replace(/'/g, "\\'");
+            // customer_email viene directo del JOIN en el modelo Order.findAll()
+            const clientEmail = (o.customer_email || '').replace(/'/g, "\'");
             return `
             <div style="border:1px solid #eee;border-radius:12px;padding:16px;margin-bottom:12px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
@@ -1211,7 +1210,7 @@ async function loadSellerOrders() {
                     </div>
                     <div style="display:flex;align-items:center;gap:10px;">
                         <span style="font-weight:bold;color:#2f2c79;">$${parseFloat(o.total).toFixed(2)}</span>
-                        <select onchange="updateOrderStatus(${o.id}, this.value, '${safeEmail}')" style="border:1px solid #ddd;border-radius:8px;padding:4px 8px;font-size:13px;">
+                        <select onchange="updateOrderStatus(${o.id}, this.value, '${clientEmail}')" style="border:1px solid #ddd;border-radius:8px;padding:4px 8px;font-size:13px;">
                             ${['pendiente','completado','cancelado'].map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}
                         </select>
                     </div>

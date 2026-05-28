@@ -264,7 +264,7 @@ const login = async (req, res) => {
 const getProfile = async (req, res) => {
     try {
         const user = await User.findById(req.userId);
-        res.json({ id: user.id, name: user.name, email: user.email, role: user.role, created_at: user.created_at });
+        res.json({ id: user.id, name: user.name, email: user.email, role: user.role, created_at: user.created_at, avatar_url: user.avatar_url });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error en el servidor' });

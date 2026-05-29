@@ -1147,7 +1147,7 @@ async function initSellerPanel() {
         const found = products.filter(p => p.stock > 0 && normalize(p.name).includes(term)).slice(0, 10);
         if (!found.length) { list.style.display = 'none'; return; }
         list.innerHTML = found.map(p => `
-            <li data-id="${p.id}" data-name="${p.name}" data-price="${p.price}" data-stock="${p.stock}"
+            <li data-id="${p.id}" data-name="${p.name}" data-price="${p.price}" data-stock="${p.stock}" data-category="${p.category || ''}"
                 style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;font-size:14px;display:flex;justify-content:space-between;">
                 <span>${p.name}</span>
                 <span style="color:#2f2c79;font-weight:bold;">$${parseFloat(p.price).toFixed(2)} <small style="color:#888;">(${p.stock} disponibles)</small></span>
@@ -1157,7 +1157,7 @@ async function initSellerPanel() {
             li.addEventListener('mouseenter', () => li.style.background = '#f5f5f5');
             li.addEventListener('mouseleave', () => li.style.background = '#fff');
             li.addEventListener('click', () => {
-                addToCart({ id: parseInt(li.dataset.id), name: li.dataset.name, price: parseFloat(li.dataset.price), stock: parseInt(li.dataset.stock) });
+                addToCart({ id: parseInt(li.dataset.id), name: li.dataset.name, price: parseFloat(li.dataset.price), stock: parseInt(li.dataset.stock), category: li.dataset.category || '' });
                 document.getElementById('saleProductSearch').value = '';
                 list.style.display = 'none';
             });
@@ -1264,7 +1264,7 @@ async function loadCustomerCart() {
             if (existing) {
                 existing.quantity = Math.min(existing.quantity + item.quantity, item.stock);
             } else {
-                saleCart.push({ id: item.id, name: item.name, price: item.price, stock: item.stock, quantity: item.quantity });
+                saleCart.push({ id: item.id, name: item.name, price: item.price, stock: item.stock, quantity: item.quantity, category: item.category || '' });
             }
         });
         renderCart();
@@ -1297,12 +1297,24 @@ async function confirmSale() {
         finalTotal = subtotal - discount;
     }
 
-    const items = saleCart.map(i => ({ product_id: i.id, product_name: i.name, quantity: i.quantity, unit_price: i.price }));
+    // Aplicar descuento proporcional a cada item para que el backend calcule bien el total
+    const discountRate = subtotal > 0 ? (finalTotal / subtotal) : 1;
+    const items = saleCart.map(i => {
+        let itemPrice = i.price;
+        if (selectedPromoForSale) {
+            if (selectedPromoForSale.category === 'Todas') {
+                itemPrice = i.price * discountRate;
+            } else if ((i.category || '') === selectedPromoForSale.category) {
+                itemPrice = i.price * (1 - selectedPromoForSale.discount / 100);
+            }
+        }
+        return { product_id: i.id, product_name: i.name, quantity: i.quantity, unit_price: parseFloat(itemPrice.toFixed(2)) };
+    });
     const fullNotes = [notes, promoNotes].filter(Boolean).join(' | ');
 
     try {
         const order = await apiFetch('/orders', { method: 'POST', body: JSON.stringify({
-            customer_name, customer_email, notes: fullNotes, items, total_override: finalTotal
+            customer_name, customer_email, notes: fullNotes, items
         })});
         // Registrar uso de promoción si se aplicó
         if (selectedPromoForSale && order && order.id) {

@@ -335,6 +335,12 @@
 		                <div style="font-size:18px;font-weight:bold;color:#2f2c79;">
 		                    Total: $<span id="saleTotal">0.00</span>
 		                </div>
+                    <div style="margin-bottom:12px;">
+                        <label style="font-weight:600;font-size:13px;color:#2f2c79;">🎯 Aplicar promoción vigente</label>
+                        <select id="salePromoSelect" class="form-control" style="margin-top:6px;">
+                            <option value="">— Sin promoción —</option>
+                        </select>
+                    </div>
 		                <button class="btn" id="confirmSaleBtn" style="background:#2f2c79;min-width:160px;">✅ Confirmar venta</button>
 		            </div>
 		        </div>
@@ -439,6 +445,33 @@
 					<input type="checkbox" id="editPromoActive" checked> Activa
 				</label>
 			</div>
+			<div class="form-group" style="margin-top:12px;">
+                <label style="font-weight:600;font-size:13px;">📂 Categoría aplicable</label>
+                <select class="form-control" id="editPromoCategory" style="margin-top:4px;">
+                        <option value="Todas">Todas</option>
+                        <option value="Arte y Manualidades">Arte y Manualidades</option>
+                        <option value="Cómputo e Impresión">Cómputo e Impresión</option>
+                        <option value="Electrónica">Electrónica</option>
+                        <option value="Escolar">Escolar</option>
+                        <option value="Higiene y Limpieza">Higiene y Limpieza</option>
+                        <option value="Muebles y Pizarrones">Muebles y Pizarrones</option>
+                        <option value="Oficina">Oficina</option>
+                        <option value="Papel">Papel</option>
+                        <option value="Regalos y Fiestas">Regalos y Fiestas</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-top:12px;">
+                <label style="font-weight:600;font-size:13px;">🔁 Tipo de uso</label>
+                <select class="form-control" id="editPromoUsageType" onchange="toggleEditUsageLimitVisibility()" style="margin-top:4px;">
+                    <option value="indefinido">Indefinido (solo por tiempo)</option>
+                    <option value="unico">Uso único por persona</option>
+                    <option value="limitado">Número limitado de usos globales</option>
+                </select>
+            </div>
+            <div id="editPromoUsageLimitWrap" style="display:none;margin-top:8px;">
+                <label style="font-weight:600;font-size:13px;">Máximo de usos totales</label>
+                <input type="number" class="form-control" id="editPromoUsageLimit" min="1" placeholder="Ej: 50" style="margin-top:4px;">
+            </div>
 			<button class="btn" id="savePromoEditBtn">Guardar cambios</button>
 		</div>
 	</div>
@@ -610,6 +643,34 @@
 	            <input type="checkbox" id="newPromoActive" checked style="width:18px;height:18px;cursor:pointer;">
 	            <label for="newPromoActive" style="margin:0;cursor:pointer;">Activar promoción</label>
 	        </div>
+	        
+			<div class="form-group" style="margin-top:12px;">
+                <label style="font-weight:600;font-size:13px;">📂 Categoría aplicable</label>
+                <select class="form-control" id="newPromoCategory" style="margin-top:4px;">
+                        <option value="Todas">Todas</option>
+                        <option value="Arte y Manualidades">Arte y Manualidades</option>
+                        <option value="Cómputo e Impresión">Cómputo e Impresión</option>
+                        <option value="Electrónica">Electrónica</option>
+                        <option value="Escolar">Escolar</option>
+                        <option value="Higiene y Limpieza">Higiene y Limpieza</option>
+                        <option value="Muebles y Pizarrones">Muebles y Pizarrones</option>
+                        <option value="Oficina">Oficina</option>
+                        <option value="Papel">Papel</option>
+                        <option value="Regalos y Fiestas">Regalos y Fiestas</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-top:12px;">
+                <label style="font-weight:600;font-size:13px;">🔁 Tipo de uso</label>
+                <select class="form-control" id="newPromoUsageType" onchange="toggleNewUsageLimitVisibility()" style="margin-top:4px;">
+                    <option value="indefinido">Indefinido (solo por tiempo)</option>
+                    <option value="unico">Uso único por persona</option>
+                    <option value="limitado">Número limitado de usos globales</option>
+                </select>
+            </div>
+            <div id="newPromoUsageLimitWrap" style="display:none;margin-top:8px;">
+                <label style="font-weight:600;font-size:13px;">Máximo de usos totales</label>
+                <input type="number" class="form-control" id="newPromoUsageLimit" min="1" placeholder="Ej: 50" style="margin-top:4px;">
+            </div>
 	        <button class="btn" id="createPromoConfirmBtn" style="width:100%;margin-top:8px;">✅ Crear promoción</button>
 	    </div>
 	</div>

@@ -899,10 +899,10 @@ h1, h2, h3, h4, .section-title, .logo-white {
 
 @media (max-width: 768px) {
     body {
-        padding: 12px;
+        padding: 10px;
     }
     .product-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
     .user-header, .admin-header {
         flex-direction: column;
@@ -921,11 +921,17 @@ h1, h2, h3, h4, .section-title, .logo-white {
         border-top: 2px solid var(--color-gris-borde);
         width: 100%;
     }
+    /* Admin menu: scroll horizontal, no apilar */
     .admin-menu {
-        flex-direction: column;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
         border-radius: 30px;
+        padding-bottom: 2px;
     }
     .admin-menu-item {
+        white-space: nowrap;
+        flex-shrink: 0;
         text-align: center;
     }
     .section-title {
@@ -933,6 +939,10 @@ h1, h2, h3, h4, .section-title, .logo-white {
     }
     .logo-white {
         font-size: 1.1rem;
+    }
+    /* Inputs: mínimo 16px para evitar zoom en iOS */
+    input, select, textarea {
+        font-size: 16px !important;
     }
 }
 
@@ -1092,142 +1102,143 @@ h1, h2, h3, h4, .section-title, .logo-white {
    RESPONSIVE AMPLIADO — modales, vendedor, tablas, admin
    ============================================================ */
 
-/* Modales: scroll interno y padding reducido en pantallas pequeñas */
-@media (max-width: 600px) {
+/* Móvil pequeño: grid de 1 columna */
+@media (max-width: 480px) {
+    .product-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Modales: scroll interno, padding reducido, ancho completo */
+@media (max-width: 640px) {
     .modal {
-        padding: 10px;
+        padding: 8px;
         align-items: flex-start;
         overflow-y: auto;
     }
     .modal-content {
-        padding: 20px 16px;
-        border-radius: 20px;
+        padding: 18px 14px !important;
+        border-radius: 18px !important;
         max-width: 100% !important;
         width: 100% !important;
-        margin-top: 10px;
-        margin-bottom: 10px;
+        margin: 8px 0;
+        max-height: 92vh;
+        overflow-y: auto;
     }
     .modal-content h3 {
         font-size: 1.1rem;
+        margin-bottom: 14px;
+    }
+    .close-modal {
+        font-size: 1.3rem;
     }
 }
 
-/* Vista vendedor — formulario nueva venta */
-@media (max-width: 768px) {
-    /* Header del vendedor */
-    .admin-view .admin-content {
-        padding: 14px !important;
-    }
-
-    /* Fila cliente/correo/notas: apilar en columna */
-    .admin-view .admin-content > div[style*="display:flex"] {
+/* Vista vendedor — responsiva */
+@media (max-width: 900px) {
+    /* Fila cliente/correo/notas: apilar */
+    #sellerView .admin-content > div > div[style*="display:flex"][style*="gap"] {
         flex-direction: column !important;
     }
 
-    /* Tabla del carrito de venta: scroll horizontal */
+    /* Tabla del carrito con scroll horizontal */
     #saleCart {
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
     #saleCart table {
-        min-width: 480px;
-    }
-
-    /* Total y botón confirmar */
-    #saleTotal {
+        min-width: 440px;
         font-size: 13px;
     }
 
-    /* Selector de promoción */
-    #salePromoSelect {
-        font-size: 13px;
-    }
-
-    /* Botón confirmar venta ocupa todo el ancho */
+    /* Botón confirmar ocupa todo el ancho */
     #confirmSaleBtn {
         width: 100% !important;
         min-width: unset !important;
     }
 
-    /* Historial de ventas — chips de productos */
+    /* Historial de ventas */
     #sellerOrdersList > div {
-        padding: 12px !important;
+        padding: 10px !important;
     }
     #sellerOrdersList select {
         font-size: 12px;
         padding: 3px 6px;
     }
+    /* Total con descuento no se desborda */
+    #saleTotal {
+        word-break: break-word;
+        font-size: 13px;
+    }
 }
 
-/* Panel Admin — tablas */
+/* Panel Admin — tablas con scroll */
 @media (max-width: 900px) {
     .admin-panel {
         grid-template-columns: 1fr;
     }
-    /* Tablas de productos/inventario con scroll horizontal */
-    #productTableBody,
-    #editTableBody,
-    #sellersListBody,
-    #adminsList {
-        display: block;
+    .admin-card {
         overflow-x: auto;
     }
     table {
-        min-width: 560px;
-    }
-    /* Admin menu horizontal con scroll */
-    .admin-menu {
-        overflow-x: auto;
-        flex-wrap: nowrap;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 4px;
-    }
-    .admin-menu-item {
-        white-space: nowrap;
-        flex-shrink: 0;
+        min-width: 520px;
     }
 }
 
-/* Promociones admin — badges no se desborden */
+/* Promociones admin en móvil */
 @media (max-width: 600px) {
-    #promosList > div {
+    #promosList > div > div {
         flex-direction: column !important;
+        align-items: flex-start !important;
     }
-    #promosList .badge-row {
+    #promosList button {
+        width: 100%;
+        margin: 3px 0 !important;
+    }
+    /* Checkboxes de promo vendedor */
+    #salePromoContainer label {
         flex-wrap: wrap;
-        gap: 4px;
-    }
-}
-
-/* Buscador de productos en usuario */
-@media (max-width: 600px) {
-    .search-wrapper {
-        flex-direction: column;
-    }
-    .category-pills {
-        gap: 6px;
-    }
-    .category-pill {
-        font-size: 0.75rem;
-        padding: 6px 12px;
-    }
-    .product-grid {
-        grid-template-columns: 1fr;
     }
 }
 
 /* Carrito flotante en móvil */
 @media (max-width: 500px) {
     #cartFloatingBtn {
-        bottom: 14px !important;
-        right: 14px !important;
+        bottom: 12px !important;
+        right: 12px !important;
         padding: 10px 14px !important;
         font-size: 13px !important;
+        border-radius: 40px !important;
+    }
+    #requestBtn {
+        bottom: 72px !important;
+        right: 12px !important;
     }
 }
 
-/* Inputs y selects: fuente mínima 16px para evitar zoom en iOS */
-@media (max-width: 768px) {
-    input, select, textarea {
-        font-size: 16px !important;
+/* Banner de promociones de usuario */
+@media (max-width: 600px) {
+    #promoBanner {
+        padding: 16px !important;
+        border-radius: 16px !important;
+    }
+    #promoBanner h3 {
+        font-size: 1rem;
+    }
+    #promoBanner p {
+        font-size: 13px;
+    }
+}
+
+/* Header admin/seller en móvil */
+@media (max-width: 640px) {
+    .admin-header, .seller-header {
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px 16px;
+        border-radius: 20px;
+    }
+    .admin-header h2, .seller-header h2 {
+        font-size: 1rem;
     }
 }

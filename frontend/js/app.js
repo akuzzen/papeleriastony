@@ -227,7 +227,7 @@ function renderProducts() {
                     <div class="product-name">${searchTerm ? highlightMatch(p.name, searchTerm) : p.name}</div>
                     <div class="product-price">${parseFloat(p.price).toFixed(2)}</div>
                     <div>${stockLabel}</div>
-                    ${p.stock > 0 ? `<button onclick="addToUserCart({id:${p.id},name:'${p.name.replace(/'/g,"\\'")}',price:${p.price},stock:${p.stock}})" style="margin-top:8px;width:100%;background:#2f2c79;color:#fff;border:none;border-radius:10px;padding:7px 0;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🛒 Agregar al carrito</button>` : ''}
+                    ${p.stock > 0 ? `<button onclick="addToUserCart({id:${p.id},name:'${p.name.replace(/'/g,"\\'")}',price:${p.price},stock:${p.stock},category:'${(p.category||'').replace(/'/g,"\\'")}' })" style="margin-top:8px;width:100%;background:#2f2c79;color:#fff;border:none;border-radius:10px;padding:7px 0;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🛒 Agregar al carrito</button>` : ''}
                 </div>`;
     }).join('');
 }
@@ -1104,33 +1104,41 @@ function toggleNewUsageLimitVisibility() {
 }
 
 // Selector de promoción en venta del vendedor
-let selectedPromoForSale = null;
+let selectedPromosForSale = []; // array de promos seleccionadas (acumulables)
 async function loadSellerPromos() {
     try {
         const promos = await apiFetch('/promotions/active-seller');
-        const sel = document.getElementById('salePromoSelect');
-        if (!sel) return;
-        sel.innerHTML = '<option value="">— Sin promoción —</option>' +
-            promos.map(p => {
-                const catLabel = p.category && p.category !== 'Todas' ? ` [${p.category}]` : '';
-                const usageLabel = p.usage_type === 'unico' ? ' (uso único)' :
-                                   p.usage_type === 'limitado' ? ` (${p.uses_count}/${p.usage_limit} usos)` : '';
-                return `<option value="${p.id}" data-discount="${p.discount_percent}" data-category="${p.category || 'Todas'}">${p.title} — ${p.discount_percent}% OFF${catLabel}${usageLabel}</option>`;
-            }).join('');
-        sel.onchange = () => {
-            const opt = sel.options[sel.selectedIndex];
-            if (!opt.value) {
-                selectedPromoForSale = null;
-            } else {
-                selectedPromoForSale = {
-                    id: parseInt(opt.value),
-                    discount: parseFloat(opt.dataset.discount) || 0,
-                    category: opt.dataset.category || 'Todas'
-                };
-            }
-            renderCart();
-        };
+        const container = document.getElementById('salePromoContainer');
+        if (!container) return;
+        if (!promos.length) {
+            container.innerHTML = '<p style="font-size:13px;color:#aaa;">No hay promociones vigentes.</p>';
+            return;
+        }
+        container.innerHTML = promos.map(p => {
+            const catLabel = p.category && p.category !== 'Todas' ? ` <span style="background:#F39C12;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;">${p.category}</span>` : '';
+            const usageLabel = p.usage_type === 'unico' ? ' <span style="background:#8e44ad;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;">uso único</span>' :
+                               p.usage_type === 'limitado' ? ` <span style="background:#e67e22;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;">${p.uses_count}/${p.usage_limit} usos</span>` : '';
+            return `<label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid #eee;margin-bottom:6px;cursor:pointer;font-size:13px;">
+                <input type="checkbox" value="${p.id}" data-discount="${p.discount_percent}" data-category="${p.category || 'Todas'}" data-title="${p.title}" onchange="togglePromoSelection(this)" style="width:16px;height:16px;cursor:pointer;">
+                <span><strong>${p.title}</strong> — ${p.discount_percent}% OFF${catLabel}${usageLabel}</span>
+            </label>`;
+        }).join('');
     } catch(e) { console.error('loadSellerPromos:', e); }
+}
+
+function togglePromoSelection(checkbox) {
+    const id = parseInt(checkbox.value);
+    if (checkbox.checked) {
+        selectedPromosForSale.push({
+            id,
+            discount: parseFloat(checkbox.dataset.discount) || 0,
+            category: checkbox.dataset.category || 'Todas',
+            title: checkbox.dataset.title || ''
+        });
+    } else {
+        selectedPromosForSale = selectedPromosForSale.filter(p => p.id !== id);
+    }
+    renderCart();
 }
 
 async function initSellerPanel() {
@@ -1213,25 +1221,30 @@ function renderCart() {
             </tbody>
         </table>`;
     const subtotal = saleCart.reduce((s, i) => s + i.price * i.quantity, 0);
-    let discount = 0;
-    let discountLabel = '';
-    if (selectedPromoForSale) {
-        // Calcular descuento: si la promo aplica a categoría específica, solo en esos productos
-        if (selectedPromoForSale.category === 'Todas') {
-            discount = subtotal * (selectedPromoForSale.discount / 100);
-            discountLabel = `— ${selectedPromoForSale.discount}% OFF (todas las categorías)`;
+    let totalDiscount = 0;
+    const discountLabels = [];
+
+    // Aplicar TODAS las promos seleccionadas (acumulables)
+    selectedPromosForSale.forEach(promo => {
+        if (promo.category === 'Todas') {
+            const d = subtotal * (promo.discount / 100);
+            totalDiscount += d;
+            discountLabels.push(`${promo.discount}% OFF (todas)`);
         } else {
-            const catItems = saleCart.filter(i => (i.category || '') === selectedPromoForSale.category);
-            const catSubtotal = catItems.reduce((s, i) => s + i.price * i.quantity, 0);
-            discount = catSubtotal * (selectedPromoForSale.discount / 100);
-            discountLabel = `— ${selectedPromoForSale.discount}% OFF en ${selectedPromoForSale.category}`;
+            const catItems = saleCart.filter(i => (i.category || '') === promo.category);
+            const catSub = catItems.reduce((s, i) => s + i.price * i.quantity, 0);
+            const d = catSub * (promo.discount / 100);
+            totalDiscount += d;
+            discountLabels.push(`${promo.discount}% OFF en ${promo.category}`);
         }
-    }
-    const total = subtotal - discount;
+    });
+
+    const total = Math.max(0, subtotal - totalDiscount);
     const saleTotalEl = document.getElementById('saleTotal');
     if (saleTotalEl) {
-        if (discount > 0) {
-            saleTotalEl.innerHTML = `<span style="text-decoration:line-through;color:#aaa;font-size:13px;">$${subtotal.toFixed(2)}</span> <span style="color:#27ae60;font-weight:800;">$${total.toFixed(2)}</span> <span style="font-size:12px;color:#27ae60;">${discountLabel}</span>`;
+        if (totalDiscount > 0) {
+            const labelStr = discountLabels.join(' + ');
+            saleTotalEl.innerHTML = `<span style="text-decoration:line-through;color:#aaa;font-size:13px;">$${subtotal.toFixed(2)}</span> <span style="color:#27ae60;font-weight:800;">$${total.toFixed(2)}</span> <span style="font-size:12px;color:#27ae60;">— ${labelStr}</span>`;
         } else {
             saleTotalEl.textContent = total.toFixed(2);
         }
@@ -1259,12 +1272,16 @@ async function loadCustomerCart() {
             showToast('Este cliente no tiene productos en su carrito', 'info'); return;
         }
         // Merge con carrito actual del vendedor
+        // Enriquecer con category desde el array de productos cargado (por si cart_data antiguo no la tiene)
         result.cart.forEach(item => {
+            const prodInfo = products.find(p => p.id === item.id);
+            const category = item.category || (prodInfo ? prodInfo.category : '') || '';
             const existing = saleCart.find(i => i.id === item.id);
             if (existing) {
                 existing.quantity = Math.min(existing.quantity + item.quantity, item.stock);
+                if (!existing.category) existing.category = category;
             } else {
-                saleCart.push({ id: item.id, name: item.name, price: item.price, stock: item.stock, quantity: item.quantity, category: item.category || '' });
+                saleCart.push({ id: item.id, name: item.name, price: item.price, stock: item.stock, quantity: item.quantity, category });
             }
         });
         renderCart();
@@ -1280,57 +1297,56 @@ async function confirmSale() {
     const customer_email = document.getElementById('saleCustomerEmail').value.trim();
     const notes = document.getElementById('saleNotes').value.trim();
 
-    // Calcular totales con descuento
+    // Calcular totales con todas las promos seleccionadas (acumulables)
     const subtotal = saleCart.reduce((s, i) => s + i.price * i.quantity, 0);
-    let finalTotal = subtotal;
-    let promoNotes = '';
-    if (selectedPromoForSale) {
-        let discount = 0;
-        if (selectedPromoForSale.category === 'Todas') {
-            discount = subtotal * (selectedPromoForSale.discount / 100);
-            promoNotes = `Promo aplicada: ${selectedPromoForSale.discount}% OFF`;
-        } else {
-            const catItems = saleCart.filter(i => (i.category || '') === selectedPromoForSale.category);
-            discount = catItems.reduce((s, i) => s + i.price * i.quantity, 0) * (selectedPromoForSale.discount / 100);
-            promoNotes = `Promo aplicada: ${selectedPromoForSale.discount}% OFF en ${selectedPromoForSale.category}`;
-        }
-        finalTotal = subtotal - discount;
-    }
+    const promoNotesParts = [];
 
-    // Aplicar descuento proporcional a cada item para que el backend calcule bien el total
-    const discountRate = subtotal > 0 ? (finalTotal / subtotal) : 1;
-    const items = saleCart.map(i => {
+    // Calcular precio final por item aplicando todos los descuentos
+    const itemsWithDiscount = saleCart.map(i => {
         let itemPrice = i.price;
-        if (selectedPromoForSale) {
-            if (selectedPromoForSale.category === 'Todas') {
-                itemPrice = i.price * discountRate;
-            } else if ((i.category || '') === selectedPromoForSale.category) {
-                itemPrice = i.price * (1 - selectedPromoForSale.discount / 100);
+        selectedPromosForSale.forEach(promo => {
+            if (promo.category === 'Todas') {
+                itemPrice = itemPrice * (1 - promo.discount / 100);
+            } else if ((i.category || '') === promo.category) {
+                itemPrice = itemPrice * (1 - promo.discount / 100);
             }
-        }
-        return { product_id: i.id, product_name: i.name, quantity: i.quantity, unit_price: parseFloat(itemPrice.toFixed(2)) };
+        });
+        return { ...i, finalPrice: parseFloat(itemPrice.toFixed(2)) };
     });
-    const fullNotes = [notes, promoNotes].filter(Boolean).join(' | ');
+    if (selectedPromosForSale.length > 0) {
+        promoNotesParts.push('Promos aplicadas: ' + selectedPromosForSale.map(p =>
+            p.category === 'Todas' ? `${p.discount}% OFF` : `${p.discount}% OFF [${p.category}]`
+        ).join(' + '));
+    }
+    const finalTotal = itemsWithDiscount.reduce((s, i) => s + i.finalPrice * i.quantity, 0);
+
+    const items = itemsWithDiscount.map(i => ({
+        product_id: i.id, product_name: i.name, quantity: i.quantity, unit_price: i.finalPrice
+    }));
+    const fullNotes = [notes, ...promoNotesParts].filter(Boolean).join(' | ');
 
     try {
         const order = await apiFetch('/orders', { method: 'POST', body: JSON.stringify({
             customer_name, customer_email, notes: fullNotes, items
         })});
-        // Registrar uso de promoción si se aplicó
-        if (selectedPromoForSale && order && order.id) {
-            try {
-                await apiFetch('/promotions/apply', { method: 'POST', body: JSON.stringify({
-                    promotion_id: selectedPromoForSale.id,
-                    order_id: order.id
-                })});
-            } catch(e) { console.warn('No se pudo registrar uso de promo:', e.message); }
+        // Registrar uso de TODAS las promos aplicadas
+        if (selectedPromosForSale.length > 0 && order && order.id) {
+            for (const promo of selectedPromosForSale) {
+                try {
+                    await apiFetch('/promotions/apply', { method: 'POST', body: JSON.stringify({
+                        promotion_id: promo.id,
+                        order_id: order.id
+                    })});
+                } catch(e) { console.warn('No se pudo registrar uso de promo:', e.message); }
+            }
         }
         showToast('Venta registrada correctamente', 'success');
         if (customer_email) showToast('Comprobante enviado al correo del cliente', 'info');
         saleCart = [];
-        selectedPromoForSale = null;
-        const promoSel = document.getElementById('salePromoSelect');
-        if (promoSel) promoSel.value = '';
+        selectedPromosForSale = [];
+        selectedPromosForSale = [];
+        // Desmarcar todos los checkboxes de promos
+        document.querySelectorAll('#salePromoContainer input[type=checkbox]').forEach(cb => cb.checked = false);
         renderCart();
         document.getElementById('saleCustomerName').value = '';
         document.getElementById('saleCustomerEmail').value = '';

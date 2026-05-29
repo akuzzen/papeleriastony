@@ -1087,3 +1087,147 @@ h1, h2, h3, h4, .section-title, .logo-white {
     background: var(--color-azul);
     color: white;
 }
+
+/* ============================================================
+   RESPONSIVE AMPLIADO — modales, vendedor, tablas, admin
+   ============================================================ */
+
+/* Modales: scroll interno y padding reducido en pantallas pequeñas */
+@media (max-width: 600px) {
+    .modal {
+        padding: 10px;
+        align-items: flex-start;
+        overflow-y: auto;
+    }
+    .modal-content {
+        padding: 20px 16px;
+        border-radius: 20px;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+    .modal-content h3 {
+        font-size: 1.1rem;
+    }
+}
+
+/* Vista vendedor — formulario nueva venta */
+@media (max-width: 768px) {
+    /* Header del vendedor */
+    .admin-view .admin-content {
+        padding: 14px !important;
+    }
+
+    /* Fila cliente/correo/notas: apilar en columna */
+    .admin-view .admin-content > div[style*="display:flex"] {
+        flex-direction: column !important;
+    }
+
+    /* Tabla del carrito de venta: scroll horizontal */
+    #saleCart {
+        overflow-x: auto;
+    }
+    #saleCart table {
+        min-width: 480px;
+    }
+
+    /* Total y botón confirmar */
+    #saleTotal {
+        font-size: 13px;
+    }
+
+    /* Selector de promoción */
+    #salePromoSelect {
+        font-size: 13px;
+    }
+
+    /* Botón confirmar venta ocupa todo el ancho */
+    #confirmSaleBtn {
+        width: 100% !important;
+        min-width: unset !important;
+    }
+
+    /* Historial de ventas — chips de productos */
+    #sellerOrdersList > div {
+        padding: 12px !important;
+    }
+    #sellerOrdersList select {
+        font-size: 12px;
+        padding: 3px 6px;
+    }
+}
+
+/* Panel Admin — tablas */
+@media (max-width: 900px) {
+    .admin-panel {
+        grid-template-columns: 1fr;
+    }
+    /* Tablas de productos/inventario con scroll horizontal */
+    #productTableBody,
+    #editTableBody,
+    #sellersListBody,
+    #adminsList {
+        display: block;
+        overflow-x: auto;
+    }
+    table {
+        min-width: 560px;
+    }
+    /* Admin menu horizontal con scroll */
+    .admin-menu {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 4px;
+    }
+    .admin-menu-item {
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+}
+
+/* Promociones admin — badges no se desborden */
+@media (max-width: 600px) {
+    #promosList > div {
+        flex-direction: column !important;
+    }
+    #promosList .badge-row {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+}
+
+/* Buscador de productos en usuario */
+@media (max-width: 600px) {
+    .search-wrapper {
+        flex-direction: column;
+    }
+    .category-pills {
+        gap: 6px;
+    }
+    .category-pill {
+        font-size: 0.75rem;
+        padding: 6px 12px;
+    }
+    .product-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Carrito flotante en móvil */
+@media (max-width: 500px) {
+    #cartFloatingBtn {
+        bottom: 14px !important;
+        right: 14px !important;
+        padding: 10px 14px !important;
+        font-size: 13px !important;
+    }
+}
+
+/* Inputs y selects: fuente mínima 16px para evitar zoom en iOS */
+@media (max-width: 768px) {
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+}

@@ -615,7 +615,30 @@ async function loadAdminPromotions() {
         const promos = await apiFetch('/promotions');
         const list = document.getElementById('promosList');
         if (!list) return;
-        list.innerHTML = promos.length === 0 ? '<p>No hay promociones.</p>' : promos.map(p => `<div style="background:#F5F5F5;border-radius:12px;padding:12px;margin-bottom:10px;border:1px solid #E0E0E0;"><div style="display:flex;justify-content:space-between;"><div><strong>${p.title}</strong> — ${p.discount_percent ?? 0}% OFF <span>${p.is_active ? '✅ Activa' : '⏸ Inactiva'}</span><div>${p.description || ''}</div></div><div><button onclick="openEditPromoModal(${p.id})" style="background:#0033A0;color:white;border:none;border-radius:20px;padding:4px 12px;margin-right:8px;cursor:pointer;">✏️ Editar</button><button onclick="deletePromotion(${p.id})" style="background:#E3000F;color:white;border:none;border-radius:20px;padding:4px 12px;cursor:pointer;">🗑️ Eliminar</button></div></div></div>`).join('');
+        const usageLabel = p => {
+            if (p.usage_type === 'unico') return '1 uso por persona';
+            if (p.usage_type === 'limitado') return `${p.uses_count || 0}/${p.usage_limit} usos`;
+            return 'Indefinido';
+        };
+        list.innerHTML = promos.length === 0 ? '<p>No hay promociones.</p>' : promos.map(p => `
+            <div style="background:#F5F5F5;border-radius:12px;padding:12px;margin-bottom:10px;border:1px solid #E0E0E0;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+                    <div style="flex:1;">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <strong>${p.title}</strong>
+                            <span style="background:#0033A0;color:#fff;border-radius:20px;padding:2px 10px;font-size:12px;">${p.discount_percent ?? 0}% OFF</span>
+                            <span style="background:${p.is_active ? '#27ae60' : '#aaa'};color:#fff;border-radius:20px;padding:2px 10px;font-size:12px;">${p.is_active ? '✅ Activa' : '⏸ Inactiva'}</span>
+                            <span style="background:#F39C12;color:#fff;border-radius:20px;padding:2px 10px;font-size:12px;">📂 ${p.category || 'Todas'}</span>
+                            <span style="background:#8e44ad;color:#fff;border-radius:20px;padding:2px 10px;font-size:12px;">🔁 ${usageLabel(p)}</span>
+                        </div>
+                        <div style="font-size:13px;color:#555;margin-top:4px;">${p.description || ''}</div>
+                    </div>
+                    <div style="display:flex;gap:6px;">
+                        <button onclick="openEditPromoModal(${p.id})" style="background:#0033A0;color:white;border:none;border-radius:20px;padding:4px 12px;cursor:pointer;">✏️ Editar</button>
+                        <button onclick="deletePromotion(${p.id})" style="background:#E3000F;color:white;border:none;border-radius:20px;padding:4px 12px;cursor:pointer;">🗑️ Eliminar</button>
+                    </div>
+                </div>
+            </div>`).join('');
     } catch (e) { console.error('Promociones admin:', e); }
 }
 
@@ -631,6 +654,10 @@ async function openEditPromoModal(promoId) {
         document.getElementById('editPromoValidFrom').value = promo.valid_from ? new Date(promo.valid_from).toISOString().split('T')[0] : '';
         document.getElementById('editPromoValidTo').value = promo.valid_to ? new Date(promo.valid_to).toISOString().split('T')[0] : '';
         document.getElementById('editPromoActive').checked = promo.is_active === true;
+        document.getElementById('editPromoCategory').value = promo.category || 'Todas';
+        document.getElementById('editPromoUsageType').value = promo.usage_type || 'indefinido';
+        document.getElementById('editPromoUsageLimit').value = promo.usage_limit || '';
+        toggleEditUsageLimitVisibility();
         document.getElementById('editPromoModal').classList.add('active');
     } catch (e) { showToast('Error al cargar promoción', 'error'); }
 }
@@ -643,9 +670,12 @@ async function savePromotionEdit() {
     const valid_from = document.getElementById('editPromoValidFrom').value || null;
     const valid_to = document.getElementById('editPromoValidTo').value || null;
     const is_active = document.getElementById('editPromoActive').checked;
+    const category = document.getElementById('editPromoCategory').value || 'Todas';
+    const usage_type = document.getElementById('editPromoUsageType').value || 'indefinido';
+    const usage_limit = usage_type === 'limitado' ? (parseInt(document.getElementById('editPromoUsageLimit').value) || null) : null;
     if (!title) { showToast('El título es obligatorio', 'warning'); return; }
     try {
-        await apiFetch(`/promotions/${id}`, { method: 'PUT', body: JSON.stringify({ title, description, discount_percent, valid_from, valid_to, is_active }) });
+        await apiFetch(`/promotions/${id}`, { method: 'PUT', body: JSON.stringify({ title, description, discount_percent, valid_from, valid_to, is_active, category, usage_type, usage_limit }) });
         showToast('Promoción actualizada correctamente', 'success');
         closeModal('editPromoModal');
         loadAdminPromotions();
@@ -685,7 +715,10 @@ document.getElementById('createPromoConfirmBtn').addEventListener('click', async
     const isActive = document.getElementById('newPromoActive').checked;
     if (!title) { showToast('El título es obligatorio', 'warning'); return; }
     try {
-        await apiFetch('/promotions', { method: 'POST', body: JSON.stringify({ title, description, discount_percent: parseInt(discount) || 0, valid_from, valid_to, is_active: isActive }) });
+        const newCategory = document.getElementById('newPromoCategory').value || 'Todas';
+        const newUsageType = document.getElementById('newPromoUsageType').value || 'indefinido';
+        const newUsageLimit = newUsageType === 'limitado' ? (parseInt(document.getElementById('newPromoUsageLimit').value) || null) : null;
+        await apiFetch('/promotions', { method: 'POST', body: JSON.stringify({ title, description, discount_percent: parseInt(discount) || 0, valid_from, valid_to, is_active: isActive, category: newCategory, usage_type: newUsageType, usage_limit: newUsageLimit }) });
         showToast('Promoción creada correctamente', 'success');
         closeModal('createPromoModal');
         loadAdminPromotions();
@@ -1055,6 +1088,51 @@ async function saveProfileAvatar() {
 // ============================================================
 //  PANEL VENDEDOR
 // ============================================================
+
+// ============================================================
+//  PROMOCIONES — helpers UI
+// ============================================================
+function toggleEditUsageLimitVisibility() {
+    const type = document.getElementById('editPromoUsageType') ? document.getElementById('editPromoUsageType').value : '';
+    const wrap = document.getElementById('editPromoUsageLimitWrap');
+    if (wrap) wrap.style.display = type === 'limitado' ? 'block' : 'none';
+}
+function toggleNewUsageLimitVisibility() {
+    const type = document.getElementById('newPromoUsageType') ? document.getElementById('newPromoUsageType').value : '';
+    const wrap = document.getElementById('newPromoUsageLimitWrap');
+    if (wrap) wrap.style.display = type === 'limitado' ? 'block' : 'none';
+}
+
+// Selector de promoción en venta del vendedor
+let selectedPromoForSale = null;
+async function loadSellerPromos() {
+    try {
+        const promos = await apiFetch('/promotions/active-seller');
+        const sel = document.getElementById('salePromoSelect');
+        if (!sel) return;
+        sel.innerHTML = '<option value="">— Sin promoción —</option>' +
+            promos.map(p => {
+                const catLabel = p.category && p.category !== 'Todas' ? ` [${p.category}]` : '';
+                const usageLabel = p.usage_type === 'unico' ? ' (uso único)' :
+                                   p.usage_type === 'limitado' ? ` (${p.uses_count}/${p.usage_limit} usos)` : '';
+                return `<option value="${p.id}" data-discount="${p.discount_percent}" data-category="${p.category || 'Todas'}">${p.title} — ${p.discount_percent}% OFF${catLabel}${usageLabel}</option>`;
+            }).join('');
+        sel.onchange = () => {
+            const opt = sel.options[sel.selectedIndex];
+            if (!opt.value) {
+                selectedPromoForSale = null;
+            } else {
+                selectedPromoForSale = {
+                    id: parseInt(opt.value),
+                    discount: parseFloat(opt.dataset.discount) || 0,
+                    category: opt.dataset.category || 'Todas'
+                };
+            }
+            renderCart();
+        };
+    } catch(e) { console.error('loadSellerPromos:', e); }
+}
+
 async function initSellerPanel() {
     if (sellerInitialized) { loadSellerOrders(); return; }
     sellerInitialized = true;
@@ -1088,6 +1166,7 @@ async function initSellerPanel() {
 
     document.getElementById('confirmSaleBtn').addEventListener('click', confirmSale);
     loadSellerOrders();
+    loadSellerPromos();
 }
 
 function addToCart(product) {
@@ -1133,8 +1212,30 @@ function renderCart() {
                 </tr>`).join('')}
             </tbody>
         </table>`;
-    const total = saleCart.reduce((s, i) => s + i.price * i.quantity, 0);
-    document.getElementById('saleTotal').textContent = total.toFixed(2);
+    const subtotal = saleCart.reduce((s, i) => s + i.price * i.quantity, 0);
+    let discount = 0;
+    let discountLabel = '';
+    if (selectedPromoForSale) {
+        // Calcular descuento: si la promo aplica a categoría específica, solo en esos productos
+        if (selectedPromoForSale.category === 'Todas') {
+            discount = subtotal * (selectedPromoForSale.discount / 100);
+            discountLabel = `— ${selectedPromoForSale.discount}% OFF (todas las categorías)`;
+        } else {
+            const catItems = saleCart.filter(i => (i.category || '') === selectedPromoForSale.category);
+            const catSubtotal = catItems.reduce((s, i) => s + i.price * i.quantity, 0);
+            discount = catSubtotal * (selectedPromoForSale.discount / 100);
+            discountLabel = `— ${selectedPromoForSale.discount}% OFF en ${selectedPromoForSale.category}`;
+        }
+    }
+    const total = subtotal - discount;
+    const saleTotalEl = document.getElementById('saleTotal');
+    if (saleTotalEl) {
+        if (discount > 0) {
+            saleTotalEl.innerHTML = `<span style="text-decoration:line-through;color:#aaa;font-size:13px;">$${subtotal.toFixed(2)}</span> <span style="color:#27ae60;font-weight:800;">$${total.toFixed(2)}</span> <span style="font-size:12px;color:#27ae60;">${discountLabel}</span>`;
+        } else {
+            saleTotalEl.textContent = total.toFixed(2);
+        }
+    }
 }
 
 function changeCartQty(idx, delta) {
@@ -1178,12 +1279,46 @@ async function confirmSale() {
     const customer_name = document.getElementById('saleCustomerName').value.trim();
     const customer_email = document.getElementById('saleCustomerEmail').value.trim();
     const notes = document.getElementById('saleNotes').value.trim();
+
+    // Calcular totales con descuento
+    const subtotal = saleCart.reduce((s, i) => s + i.price * i.quantity, 0);
+    let finalTotal = subtotal;
+    let promoNotes = '';
+    if (selectedPromoForSale) {
+        let discount = 0;
+        if (selectedPromoForSale.category === 'Todas') {
+            discount = subtotal * (selectedPromoForSale.discount / 100);
+            promoNotes = `Promo aplicada: ${selectedPromoForSale.discount}% OFF`;
+        } else {
+            const catItems = saleCart.filter(i => (i.category || '') === selectedPromoForSale.category);
+            discount = catItems.reduce((s, i) => s + i.price * i.quantity, 0) * (selectedPromoForSale.discount / 100);
+            promoNotes = `Promo aplicada: ${selectedPromoForSale.discount}% OFF en ${selectedPromoForSale.category}`;
+        }
+        finalTotal = subtotal - discount;
+    }
+
     const items = saleCart.map(i => ({ product_id: i.id, product_name: i.name, quantity: i.quantity, unit_price: i.price }));
+    const fullNotes = [notes, promoNotes].filter(Boolean).join(' | ');
+
     try {
-        await apiFetch('/orders', { method: 'POST', body: JSON.stringify({ customer_name, customer_email, notes, items }) });
+        const order = await apiFetch('/orders', { method: 'POST', body: JSON.stringify({
+            customer_name, customer_email, notes: fullNotes, items, total_override: finalTotal
+        })});
+        // Registrar uso de promoción si se aplicó
+        if (selectedPromoForSale && order && order.id) {
+            try {
+                await apiFetch('/promotions/apply', { method: 'POST', body: JSON.stringify({
+                    promotion_id: selectedPromoForSale.id,
+                    order_id: order.id
+                })});
+            } catch(e) { console.warn('No se pudo registrar uso de promo:', e.message); }
+        }
         showToast('Venta registrada correctamente', 'success');
         if (customer_email) showToast('Comprobante enviado al correo del cliente', 'info');
         saleCart = [];
+        selectedPromoForSale = null;
+        const promoSel = document.getElementById('salePromoSelect');
+        if (promoSel) promoSel.value = '';
         renderCart();
         document.getElementById('saleCustomerName').value = '';
         document.getElementById('saleCustomerEmail').value = '';
